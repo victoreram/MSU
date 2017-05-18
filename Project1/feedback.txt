@@ -1,0 +1,77 @@
+The total score is 100 points and each project
+counts 25% of the final mark. Remember to send us your github username. 
+The following items/sections should be included in your report.  
+Please try to remember all these sections and elements. 
+
+// Abstract: 
+It should be accurate and informative. 
+Remember to state your main findings here. If there are specific
+results you have obtained, they should be stated here.
+Total number of possible points: 5
+
+Excellent abstract, this is a typical full score, 5
+
+
+ // Introduction: 
+Here you motivate the reader, give a status of the problem(s) and 
+the major objectives. State what you have done and give an outline
+of the report.
+Total number of possible points: 10
+
+The motivation is top, but you could have explained briefly what you have done and developed. The intro is often split in three parts, motivation, what we have done and finally the disposition of the report. Still this is very well written. I would not deduct much here and give a top score again.
+
+// Formalism/methods: 
+Here you discuss the methods used and their basis/suitability.  Give a presentation of the algorithm(s), possible
+errors etc etc. 
+Total number of possible points: 20
+
+Again, this is marvelous, well explained and to the point.
+
+// Code/Implementations/test: 
+Here you should discuss how you implemented the algorithms, how you tested the algorithms,
+which other tests you have implemented, eventual  timings
+and possible benchmark calculations.  Clarity of codes are also included in the evaluation.
+Total number of possible points 20
+
+Here as well you guys are following the book from A to Z, full score. The benchmarks as well with output files etc are
+as they should be.
+
+// Analysis of results:
+Here you should discuss your main findings, link them up with existing literature, discuss 
+eventual errors, the effectiveness of your algorithm, stability of the calculations etc. 
+Total number of possible points: 20
+
+
+This is one of the better analyses I have seen, and your comments about speed between c++ and python is to the point. When we deal with heavy loops like here, python is not very efficient. This is also one of the reasons why it is important to learn a new language like c++ since many scientific applications 
+involve loops which run over long times. Figure 2 was very interesting and the timing in table 1 just great!
+
+
+
+
+ //Conclusions and perspectives: 
+Here you give a summary of your discussions and critical comments, what was learned about the method(s) 
+you used and on the results obtained. If possible, try to present some perspectives for future work,
+Possible directions and future improvements.  
+Total number of possible points: 10
+
+Excellent conclusions.
+
+
+//Clarity of figures, tables and overall presentation. 
+Remember proper table and figure captions. Label all lines properly and remember labels on your axes.
+If specific units are used, these should be stated.
+Total number of possible points: 10
+
+Figures and tables are very clear, with proper labels and captions. Excellent work.
+
+//References: 
+You should cite relevant works accurately. As an example, for journal articles use
+Author(s), Journal name, volume, pages and year (you can include title as well and possible weblink).
+For books, use Author(s), title of book, publisher, year and eventually which pages. 
+Total number of possible points: 5
+
+Perfect!
+
+
+This is a clear case of a score close to 100 out of 100. Keep up the good work lads, this is excellent. And your repository is well structured.
+All elements are properly accounted for. 

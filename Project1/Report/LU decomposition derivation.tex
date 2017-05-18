@@ -1,0 +1,51 @@
+\documentclass{article}
+\title{Project 1}
+\author{Nat Hawkins, Victor Ramirez, Mike Roosa, Pranjal Tiwari}
+\date{26 Jan, 2017}
+
+\usepackage{relsize,makeidx,color,setspace,amsmath,amsfonts,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{bm,ltablex,microtype}
+\usepackage{placeins}
+\usepackage{listings}
+\usepackage[top = 1in, bottom = 1in, right = 1in, left = 1in]{geometry}
+\usepackage[pdftex]{graphicx}
+
+\begin{document}
+\maketitle
+
+LU-Decomposition is a process by which a matrix A can be turned into an upper and lower diagonal matrix to make it easier to deal with. But there are ways to make a program to complete this process in an efficient manner. To set it up, say 
+\begin{equation*}
+A = LU 
+\end{equation*}
+with row elements $i$ and column elements $j$. So, the ith row and jth column of matrix A would be denoted by A\textsubscript{ij}. 
+
+To start, there are a few tricks that we can use to easily get some values for U. In the first step, U\textsubscript{1j}=A\textsubscript{1j}. This will allow us to get the entire first row of the U matrix with little work, this just needs to be iterated over the dimensions of the matrix. We can use this simple equation because the matrix A is a multiplication of matrix L and U. The first row of L is 
+$L=\begin{bmatrix}
+1&0&0&0
+\end{bmatrix}$
+and the first row of L times the first column of U will always be equal to the first row of matrix U, or in other words,
+\begin{equation*}
+A\textsubscript{1j}=U\textsubscript{1j}
+\end{equation*}
+
+In step two, we will derive some values for L. All diagonal elements of the L matrix is 1, due to the fact that L is a lower triangular matrix. When we multiply a row of matrix L with a column of matrix U, we will find the value of a value in matrix a with the row and column index equal to the row and column number used in the previously mentioned multiplication. We can find a pattern, which can be automated with the following equation:    
+\begin{equation*}
+L_{ij}=\frac{A_{ij} - \sum_{k=1}^{j-1} L_{ik} U_{kj}} {U_{ij}}.
+\end{equation*}
+Now we have all the values of matrix L
+
+In step three, we will be finding the values for the diagonal elements of U. This is done in a similar method as above, where we use patterns from simple matrix multiplication and with the knowledge of what the result of this multiplication would be, we can predict the elements that were multiplied within matrix U. The following equation can be used for this purpose:
+
+When $i$=$j$,
+\begin{equation*}
+U_{ij}=A_{ij} -\sum_{k=1}^{i-1} L_{ik} U_{ki}
+\end{equation*}
+
+In the final step, we will be concerned with all elements within U, where $i$ $<$ $j$. This will get all the diagonal elements of U, which will complete our knowledge of the values of the elements of U
+
+\begin{equation*}
+U_{ij} = A_{ij}- \sum_{k=1}^{i-1} L_{ik} U_{kj}
+\end{equation*}
+
+\end{document}

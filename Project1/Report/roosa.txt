@@ -1,0 +1,13 @@
+hey look maybe this will be usefull:
+goals of the project:
+-machine accuracy
+-problem solving in cpp
+ conclusions?
+ cpp is nifty:
+     v fast but v hard
+
+
+
+ concluding remarks
+The numerical ODE solver performed as expected, it showed increasing accuracy up until the relative error began to approach 10^-12. At that point the truncation errors of the machine began to accumulate, decreasing the overal accuracy. 
+ By using the algorithmic tricks we discussed in class we could reduce the total computations to the order of N. this resulted in the vector method being much faster than the LU analogue, so much so as to give several orders of increased accuracy for comparable computation time.  
