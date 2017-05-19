@@ -1,7 +1,12 @@
 #include "Coulomb_Functions.hpp"
+#include <iostream>
+using namespace std;
 
 int main(int argc, char * argv[])
 {
+  for (unsigned int i = 0; i < 10; i++){
+  cout << argv[i] << endl;
+  }
   if(argc != 10){ std::cerr << "Wrong Input: should be ./QD_Coulomb  hw  n1  ml1  n2  ml2  n3  ml3  n4  ml4" << std::endl; exit(1); }
   double hw = std::atof(argv[1]);
   int n1 = std::atoi(argv[2]);
