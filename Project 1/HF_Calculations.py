@@ -1,4 +1,7 @@
-from Coulomb import Coulomb
+import sys
+sys.path.append('NSCL_2017\Project 1')
+import Coulomb
+#from Coulomb import Coulomb
 import numpy as np
 import math
 from decimal import Decimal
@@ -12,7 +15,7 @@ n = []
 m = []
 m_s = []
 non_zero_combinations = []
-NParticles=6
+NParticles=20
 epsilon = 10**(-4)
 hw=1
 
@@ -40,7 +43,7 @@ hbar_omega = 1
 CMatrix = np.eye(spOrbitals) # HF coefficients
 DensityMatrix = np.zeros([spOrbitals,spOrbitals])
 HFMatrix = np.zeros([spOrbitals,spOrbitals])
-Coulomb.write_coulomb_file(hw,nuclei_file="nucleispnumbers.dat")
+#Coulomb.write_coulomb_file(hw,nuclei_file="nucleispnumbers.dat")
 CoulombMatrix = Coulomb.read_coulomb_file(spOrbitals,coulomb_file="coulomb.dat")
 for gamma in range(spOrbitals):
     for delta in range(spOrbitals):
@@ -50,7 +53,7 @@ for gamma in range(spOrbitals):
 #                 print("gamma: {} i: {} delta: {}".format(gamma,i,delta))
         DensityMatrix[gamma][delta] = Decimal(sum_)
 
-print(DensityMatrix)
+print("Density matrix: \n", DensityMatrix)
 
 hf_count = 0
 maxHFiter = 10
@@ -127,5 +130,5 @@ with open("hf_energies.txt", "w") as hffile:
         #print(HFMatrix)
     #hffile.write(newenergies)
 #print("Final Density Matrix \n {}".format(DensityMatrix))
-        print("SP energies \n {}".format(spenergies))
-    print(DensityMatrix)
+        print("Iteration: {} \n SP energies \n {}".format(hf_count,spenergies))
+    #print(DensityMatrix)

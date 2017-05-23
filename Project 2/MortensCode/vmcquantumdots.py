@@ -11,6 +11,7 @@ from random import random
 if len(sys.argv) == 2:
     outfilename = sys.argv[1]
 else:
+    outfilename = "outfile.txt"
     print('\nError: Name of output file must be given as command line argument.\n')
 
 #Initialisation function
