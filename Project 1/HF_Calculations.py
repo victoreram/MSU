@@ -53,7 +53,7 @@ for gamma in range(spOrbitals):
 #                 print("gamma: {} i: {} delta: {}".format(gamma,i,delta))
         DensityMatrix[gamma][delta] = Decimal(sum_)
 
-print("Density matrix: \n", DensityMatrix)
+#print("Density matrix: \n", DensityMatrix)
 
 hf_count = 0
 maxHFiter = 10
@@ -75,8 +75,12 @@ with open("hf_energies.txt", "w") as hffile:
                 M_s_ab = m_s[alpha] + m_s[beta]
                 M_ab = m[alpha] + m[beta]
                 '''Add initial term for E_a_b'''
-                if beta == alpha:   
-                    HFMatrix[alpha][beta] += singleparticleH[alpha]
+#==============================================================================
+#                 if beta == alpha:   
+#                     HFMatrix[alpha][beta] += singleparticleH[alpha]
+#                     spenergies, CMatrix = np.linalg.eigh(HFMatrix)
+# 
+#==============================================================================
                 sum_1 = 0.0
                 for gamma in range(spOrbitals):
                     for delta in range(spOrbitals):
@@ -97,32 +101,34 @@ with open("hf_energies.txt", "w") as hffile:
                             #print(gamma,delta,DensityMatrix[gamma][delta])
                             sum_1 += DensityMatrix[gamma][delta]*direct_exchange_term       
                 HFMatrix[alpha][beta] += sum_1                 
-
+                if beta == alpha:   
+                    HFMatrix[alpha][beta] += singleparticleH[alpha]
+                    spenergies, CMatrix = np.linalg.eigh(HFMatrix)
                 #print(sum_1)
 
-        spenergies, CMatrix = np.linalg.eigh(HFMatrix)
+                #spenergies, CMatrix = np.linalg.eigh(HFMatrix)
         #print(spenergies)
-        for gamma in range(spOrbitals):
-            for delta in range(spOrbitals):
-                sum_ = 0.0
-                for i in range(NParticles):
-                    sum_ += CMatrix[gamma][i]*CMatrix[delta][i]
-        #                 print("gamma: {} i: {} delta: {}".format(gamma,i,delta))
-                DensityMatrix[gamma][delta] = Decimal(sum_)
-#                 '''Summing C terms'''
-#                 for j in range(NParticles):
-#                     C_sum += CMatrix[j][gamma]*CMatrix[j][delta]
+                for gamma in range(spOrbitals):
+                    for delta in range(spOrbitals):
+                        sum_ = 0.0
+                        for i in range(NParticles):
+                            sum_ += CMatrix[gamma][i]*CMatrix[delta][i]
+                #                 print("gamma: {} i: {} delta: {}".format(gamma,i,delta))
+                        DensityMatrix[gamma][delta] = Decimal(sum_)
+        #                 '''Summing C terms'''
+        #                 for j in range(NParticles):
+        #                     C_sum += CMatrix[j][gamma]*CMatrix[j][delta]
 
 #                 '''Update Density and HF Matrix'''
 #                 DensityMatrix[gamma][delta] = Decimal(C_sum)
     #spenergies, CMatrix = np.linalg.eigh(HFMatrix)
-        newenergies = spenergies
-        """ Brute force computation of difference between previous and new sp HF energies """
-        sum_ =0.0
-        for i in range(spOrbitals):
-            sum_ += (abs(newenergies[i]-oldenergies[i]))/spOrbitals
-        difference = sum_
-        oldenergies = newenergies
+                newenergies = spenergies
+                """ Brute force computation of difference between previous and new sp HF energies """
+                sum_ =0.0
+                for i in range(spOrbitals):
+                    sum_ += (abs(newenergies[i]-oldenergies[i]))/spOrbitals
+                difference = sum_
+                oldenergies = newenergies
 
         #print("difference ", difference)
 
