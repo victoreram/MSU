@@ -11,7 +11,7 @@ from random import random
 if len(sys.argv) == 2:
     outfilename = sys.argv[1]
 else:
-    outfilename = "outfile.txt"
+    outfilename = "outfile_m.txt"
     print('\nError: Name of output file must be given as command line argument.\n')
 
 #Initialisation function
@@ -136,6 +136,7 @@ for variate in range(max_variations):
     energy /= number_cycles
     energy2 /= number_cycles
     variance = energy2 - energy**2
+    #print(energy, energy2, variance)
     error = math.sqrt(variance/number_cycles)
         
     #...and write them to file
