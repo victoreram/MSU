@@ -146,3 +146,5 @@ outfile.close()
 
 print('\nDone. Results are in the file "%s", formatted as:\n\
 alpha, <energy>, variance, error, acceptance ratio' %(outfilename))
+
+

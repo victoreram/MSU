@@ -6,7 +6,7 @@ Created on Thu May 25 12:45:51 2017
 """
 import numpy as np
 import math
-import sys
+import time
 from random import random
 #from decimal import Decimal
 
@@ -26,22 +26,20 @@ def init(input_file):
         w = eval(params[7])
     return n_particles, dimensions, max_variations, n_cycles, step_length, alpha, alpha_step,w
     
-def jastrow(a,r,beta,n,dimension):
-    arg = 0.0
-    wf = 1.0
+def jastrow(wf,a,r,beta,n,dimension):
     for i in range(n-1):
         for j in range(i+1,n):
-            #r_12 = 0
-            arg = 0.0
+            r_12 = 0.0
             for k in range(dimension):
-                arg += a*r[i,j]/(1+beta*r[i,j])
-            wf *= math.exp(arg)
+                r_12 += (r[i,k] - r[j,k])**2
+            r_12 = math.sqrt(r_12)
+            wf *= math.exp(.5*r_12)
     return wf
     
 def energy_l1(w,r_1,r_2,alpha):
     return .5*w**2*(r_1**2+r_2**2)*(1-alpha**2) + 2*alpha*w
     
-def trial_wavefunction(w, alpha, r, n_particles, dimensions, beta = 1.0, jastrow_factor=False):
+def trial_wavefunction(w, alpha, r, n_particles, dimensions, beta = 0.3, jastrow_factor=False):
     r_sum = 0    
     for i in range(n_particles):
         #loop over each particle
@@ -51,7 +49,7 @@ def trial_wavefunction(w, alpha, r, n_particles, dimensions, beta = 1.0, jastrow
         r_sum += r_ij_particle
     wf = math.exp(-0.5*alpha*w*r_sum)
     if jastrow_factor == True:
-        wf *= jastrow(alpha, r, beta, n_particles, dimensions)
+        wf *= jastrow(wf,alpha, r, beta, n_particles, dimensions)
     return wf
         
         
@@ -92,9 +90,14 @@ def local_energy(w, alpha, r,n_particles,dimensions, wf, h=0.001, h2 = 1E6):
 #            e_potential += 1/math.sqrt(r_12)
     
     return e_potential + e_kinetic
+input_file = input("Enter the input file name: ")
+if input_file == '':
+    input_file = 'infile.txt'
 
-input_file = 'infile.txt'
-outfilename = 'outfile.txt'
+outfilename = input("Enter the output file name: ")
+if outfilename == '':    
+    outfilename = 'outfile.txt'
+t_i = time.time()
 outfile = open(outfilename,'w')
 h = .001
 h2 = 1/(h**2)
@@ -156,5 +159,13 @@ outfile.close()
 
 print('\nDone. Results are in the file "%s", formatted as:\n\
 alpha, <energy>, variance, error, acceptance ratio' %(outfilename))
+t_f = time.time()
+delta_t = t_f - t_i
+print("computation time took {}s".format(delta_t))
 
-
+#jastrow
+#importance sampling
+#calculation of covariance, standard deviation with blocking
+#finding minimum fr multiple functions, find optimal alpha and beta
+#conjugate gradient
+#parallelize
