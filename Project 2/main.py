@@ -64,5 +64,7 @@ Oscillator Frequency w: {}
 '''.format(solver.mc_cycles,solver.step_length,solver.alpha_variations,solver.alpha,solver.final_alpha,solver.beta_variations,solver.beta,solver.final_beta,solver.jastrow_bool,system.number_of_particles,system.dimensions,system.w)
 print(parameter_string)
 solver.optimize_parameters(system, outfile)
+infile.close()
+outfile.close()
 #print(results)
 
