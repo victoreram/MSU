@@ -4,9 +4,9 @@ Created on Fri Jun  9 14:31:37 2017
 
 @author: ramir
 """
-import numpy as np
-import math
-from random import random
+#import numpy as np
+#import math
+#from random import random
 from Solver import Solver
 from System import System
 
@@ -66,5 +66,7 @@ print(parameter_string)
 solver.optimize_parameters(system, outfile)
 infile.close()
 outfile.close()
+print('\nDone. Results are in the output file, formatted as:\n\
+alpha, beta, <energy>, variance, error, acceptance ratio' )
 #print(results)
 
