@@ -47,7 +47,7 @@ class Solver:
         return minimum_alpha, minimum_beta, minimum_energy                      
             
     def trial_wavefunction(self, r, system):
-        r_sum = 0    
+        r_sum = 0.0
         for i in range(system.number_of_particles):
             #loop over each particle
             r_ij_particle = 0.0
@@ -109,8 +109,23 @@ class Solver:
         
         return e_potential + e_kinetic
         
-#    def local_energy(self, r, system):
-#        pass
+    def local_energy1(self, system):
+        w = system.w
+        energy = 0.0
+        r_squared = 0.0
+        for particle in system.particles:
+            r_i = particle.r_squared()
+            r_squared += r_i
+            
+        energy = 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
+        
+        #Coulomb repulsio
+        r_12 = system.particle_distance_squared()
+        #energy += 1/r_12
+            #old_position = particle.position
+            #particle.random_move(old_position)
+                
+        return energy
     def local_energy2(self, r, wf, system):
         #local energy with coulomb interaction
         total_energy = 0.0
@@ -146,23 +161,25 @@ class Solver:
         step_length = self.step_length
         n_cycles = self.mc_cycles
         #variations = self.variations
-        r_0 = np.zeros((n_particles,dimensions), np.double)
-        r_n = np.zeros((n_particles,dimensions), np.double)
-        #for variation in range(variations):
+#        r_0 = np.zeros((n_particles,dimensions), np.double)
+#        r_n = np.zeros((n_particles,dimensions), np.double)
+        
         energy = energy2 = 0.0
         accept = 0.0
         delta_e = 0.0
         #Initial position
-        for i in range(n_particles):
-            for j in range(dimensions):
-                r_0[i,j] = step_length * (random() - .5)
+#        for i in range(n_particles):
+#            for j in range(dimensions):
+#                r_0[i,j] = step_length * (random() - .5)
+        #Initial position
+        system.advance_time(step_length)
         wf_0 = self.trial_wavefunction(r_0, system)
         for cycle in range(self.mc_cycles):
-    
             #Trial position
-            for i in range(n_particles):
-                for j in range(dimensions):
-                    r_n[i,j] = r_0[i,j] + step_length * (random() - .5)
+            system.advance_time(step_length)
+#            for i in range(n_particles):
+#                for j in range(dimensions):
+#                    r_n[i,j] = r_0[i,j] + step_length * (random() - .5)
                     #r_n[i,j] = r_0[i,j] + step_length * (random.normal_distribution(0.0,1.0) - .5)
     
             wf_n = self.trial_wavefunction(r_n, system)
