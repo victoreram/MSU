@@ -68,5 +68,10 @@ infile.close()
 outfile.close()
 print('\nDone. Results are in the output file, formatted as:\n\
 alpha, beta, <energy>, variance, error, acceptance ratio' )
-#print(results)
+#take away jastrow, calculate energy
+#importance sampling
+#calculation of covariance, standard deviation with blocking
+#finding minimum fr multiple functions, find optimal alpha and beta
+#conjugate gradient
+#parallelize
 

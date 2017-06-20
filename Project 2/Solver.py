@@ -60,7 +60,6 @@ class Solver:
         return wf
         
     def jastrow(self,wf,r,system):
-    #jastrow_factor = 1.0
         for i in range(system.number_of_particles-1):
             for j in range(i+1,system.number_of_particles):
                 r_12 = 0.0
@@ -69,6 +68,8 @@ class Solver:
                 arg = math.sqrt(r_12)
                 wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
+        #analytic expression version
+        #for i in range(system.number_of_particles)
         
     def local_energy(self,r, wf, system, h=0.001, h2 = 1E6):
         #Kinetic energy
@@ -88,7 +89,6 @@ class Solver:
                 r_minus[i,j] = r[i,j]
         
         e_kinetic = .5*h2*e_kinetic/wf
-        #print("e_kinetic",  e_kinetic)
         #Potential energy
         e_potential = 0.0
         #harmonic oscillator  contribution
@@ -105,9 +105,29 @@ class Solver:
                 for j in range(dimensions):
                     r_12 += (r[i1,j] - r[i2,j])**2
                 if self.jastrow_bool == True:
-                    e_potential += 1/math.sqrt(r_12)
+                    e_potential += 1.0/math.sqrt(r_12)
         
         return e_potential + e_kinetic
+        
+#    def local_energy(self, r, system):
+#        pass
+    def local_energy2(self, r, wf, system):
+        #local energy with coulomb interaction
+        total_energy = 0.0
+        #2 electron case, ground state, opposite spins, a= 1.0
+        a = 1.0
+        for i in range(system.number_of_particles):
+            r_single_particle = 0.0
+            for j in range(system.dimensions):
+                r_single_particle += r[i,j]**2 #Why not just r[i,j]?
+            
+            r_12 = math.sqrt(r_single_particle)
+            denom = a/((1+self.beta*r_12)**2)
+            total_energy += 2*self.alpha**2*system.w*r_single_particle
+            total_energy -= 4*self.alpha*system.w
+            total_energy -= 2*self.alpha*system.w*denom
+            total_energy += 2*denom*(a*denom + 1/r_12 - 2*self.beta/(1+self.beta*r_12))
+        return total_energy
         
     def relative_distance(self, system,r):
         n_particles = system.number_of_particles
@@ -143,6 +163,7 @@ class Solver:
             for i in range(n_particles):
                 for j in range(dimensions):
                     r_n[i,j] = r_0[i,j] + step_length * (random() - .5)
+                    #r_n[i,j] = r_0[i,j] + step_length * (random.normal_distribution(0.0,1.0) - .5)
     
             wf_n = self.trial_wavefunction(r_n, system)
             
@@ -152,7 +173,9 @@ class Solver:
                 wf_0 = wf_n
                 accept += 1
             #update expectation values
+            
             delta_e = self.local_energy(r_0, wf_0, system)
+            #delta_e = self.local_energy2(r_0, wf_0, system)
             energy += delta_e
             energy2 += delta_e**2
         #We calculate mean, variance and error ...

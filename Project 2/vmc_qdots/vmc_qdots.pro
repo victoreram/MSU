@@ -8,7 +8,8 @@ SOURCES += main.cpp \
     split.cpp
 
 HEADERS += \
-    system.h
+    system.h \
+    particle.h
 LIBS += -LC:\Users\ramir\OneDrive\Documents\armadillo-7.900.1\examples\lib_win64 -llapack_win64_MT
 LIBS += -LC:\Users\ramir\OneDrive\Documents\armadillo-7.900.1\examples\lib_win64 -lblas_win64_MT
 INCLUDEPATH += C:\Users\ramir\OneDrive\Documents\armadillo-7.900.1\inc
