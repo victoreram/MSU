@@ -46,38 +46,60 @@ class Solver:
         print("Minimum energy {} at alpha = {}, beta = {}".format(minimum_energy, minimum_alpha, minimum_beta))
         return minimum_alpha, minimum_beta, minimum_energy                      
             
-    def trial_wavefunction(self, r, system):
-        r_sum = 0.0
-        for i in range(system.number_of_particles):
-            #loop over each particle
-            r_ij_particle = 0.0
-            for j in range(system.dimensions):
-                r_ij_particle += r[i,j]**2
-            r_sum += r_ij_particle
+#    def trial_wavefunction(self, r, system):
+#        r_sum = 0.0
+#        for i in range(system.number_of_particles):
+#            #loop over each particle
+#            r_ij_particle = 0.0
+#            for j in range(system.dimensions):
+#                r_ij_particle += r[i,j]**2
+#            r_sum += r_ij_particle
+#        wf = math.exp(-0.5*self.alpha*system.w*r_sum)
+#        if self.jastrow_bool == True:
+#            wf = self.jastrow(wf, r, system)
+#        return wf
+#        
+        
+    def trial_wavefunction(self, system):
+        r_sum = system.relative_distance_squared()
         wf = math.exp(-0.5*self.alpha*system.w*r_sum)
+        
         if self.jastrow_bool == True:
-            wf = self.jastrow(wf, r, system)
+            wf = self.jastrow(wf,system)
         return wf
         
-    def jastrow(self,wf,r,system):
+    def jastrow(self,wf,system):
         for i in range(system.number_of_particles-1):
             for j in range(i+1,system.number_of_particles):
                 r_12 = 0.0
                 for k in range(system.dimensions):
-                    r_12 += (r[i,k] - r[j,k])**2
+                    r_12 += (system.position_matrix[i][k] - system.position_matrix[j][k])**2
                 arg = math.sqrt(r_12)
                 wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
+        
+        
+#    def jastrow(self,wf,r,system):
+#        for i in range(system.number_of_particles-1):
+#            for j in range(i+1,system.number_of_particles):
+#                r_12 = 0.0
+#                for k in range(system.dimensions):
+#                    r_12 += (r[i,k] - r[j,k])**2
+#                arg = math.sqrt(r_12)
+#                wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
+#        return wf
         #analytic expression version
         #for i in range(system.number_of_particles)
         
     def local_energy(self,r, wf, system, h=0.001, h2 = 1E6):
+        '''Local energy using numerical derivative'''
         #Kinetic energy
         n_particles = system.number_of_particles
         dimensions = system.dimensions
         r_plus = r.copy()
         r_minus = r.copy()
         e_kinetic = 0.0
+        #numerical derivative
         for i in range(n_particles):
             for j in range(dimensions):
                 r_plus[i,j] = r[i,j] + h
@@ -156,14 +178,14 @@ class Solver:
                 return r_12
         
     def MC_calculations(self,system, energy_min = 100.0):
-        n_particles = system.number_of_particles
-        dimensions = system.dimensions
+        #n_particles = system.number_of_particles
+        #dimensions = system.dimensions
         step_length = self.step_length
         n_cycles = self.mc_cycles
         #variations = self.variations
-#        r_0 = np.zeros((n_particles,dimensions), np.double)
+        #r_0 = np.zeros((n_particles,dimensions), np.double)
 #        r_n = np.zeros((n_particles,dimensions), np.double)
-        
+        r_0 = system.position_matrix
         energy = energy2 = 0.0
         accept = 0.0
         delta_e = 0.0
@@ -173,7 +195,7 @@ class Solver:
 #                r_0[i,j] = step_length * (random() - .5)
         #Initial position
         system.advance_time(step_length)
-        wf_0 = self.trial_wavefunction(r_0, system)
+        wf_0 = self.trial_wavefunction(system)
         for cycle in range(self.mc_cycles):
             #Trial position
             system.advance_time(step_length)
@@ -181,8 +203,8 @@ class Solver:
 #                for j in range(dimensions):
 #                    r_n[i,j] = r_0[i,j] + step_length * (random() - .5)
                     #r_n[i,j] = r_0[i,j] + step_length * (random.normal_distribution(0.0,1.0) - .5)
-    
-            wf_n = self.trial_wavefunction(r_n, system)
+            r_n = system.position_matrix
+            wf_n = self.trial_wavefunction(system)
             
             #Metropolis test to see whether we accept the move
             if random() < wf_n**2 / wf_0**2:
@@ -191,7 +213,9 @@ class Solver:
                 accept += 1
             #update expectation values
             
-            delta_e = self.local_energy(r_0, wf_0, system)
+            #delta_e = self.local_energy(r_0, wf_0, system)
+            delta_e = self.local_energy1(system)
+
             #delta_e = self.local_energy2(r_0, wf_0, system)
             energy += delta_e
             energy2 += delta_e**2

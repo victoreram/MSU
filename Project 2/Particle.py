@@ -24,8 +24,8 @@ class Particle:
             self.position[index] = new_coordinate
             
         #print(self.position)
-    def move(self, step_length):
-        
+    def move(self, step_length=1.0):
+        '''Move for importance sampling'''
         pass
     
     def distance_difference(self, old_position):

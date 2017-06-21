@@ -9,6 +9,7 @@ Created on Fri Jun  9 14:31:37 2017
 #from random import random
 from Solver import Solver
 from System import System
+import time
 
 
 def initialize(infile):
@@ -63,11 +64,17 @@ Dimensions: {}
 Oscillator Frequency w: {}
 '''.format(solver.mc_cycles,solver.step_length,solver.alpha_variations,solver.alpha,solver.final_alpha,solver.beta_variations,solver.beta,solver.final_beta,solver.jastrow_bool,system.number_of_particles,system.dimensions,system.w)
 print(parameter_string)
+t_i = time.time()
+
 solver.optimize_parameters(system, outfile)
 infile.close()
 outfile.close()
 print('\nDone. Results are in the output file, formatted as:\n\
 alpha, beta, <energy>, variance, error, acceptance ratio' )
+
+t_f = time.time()
+delta_t = t_f - t_i
+print("computation time took {}s".format(delta_t))
 #take away jastrow, calculate energy
 #importance sampling
 #calculation of covariance, standard deviation with blocking
