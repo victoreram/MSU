@@ -9,13 +9,12 @@ import numpy as np
 #from System import System
 from random import random
 class Solver:
-    def __init__(self, alpha_variations, mc_cycles, step_length, alpha, beta, alpha_step,beta_step,beta_variations,jastrow_bool):
-        '''Solver(variations, mc_cycles, step_length, alpha, beta, jastrow factor enabled
-        (True or False))'''
+    def __init__(self, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations,jastrow_bool):
+        '''Solver(mc_cycles, alpha, beta, jastrow factor enabled
+        (True or False)), Hamiltonian'''
         self.alpha_variations = alpha_variations
         self.beta_variations = beta_variations
         self.mc_cycles = mc_cycles
-        self.step_length = step_length
         self.alpha = alpha
         self.beta = beta
         self.jastrow_bool = jastrow_bool
@@ -25,9 +24,11 @@ class Solver:
         self.final_beta = beta + (beta_variations-1)*beta_step
         self.alphas = np.linspace(alpha,self.final_alpha,alpha_variations)
         self.betas = np.linspace(beta,self.final_beta,beta_variations)
-        
+        #self.hamiltonian = hamiltonian
         
     def optimize_parameters(self, system, outfile, minimum_energy=1000.0):
+        '''Test varational parameters. Default parameters include alpha
+        and beta'''
         alphas = self.alphas.copy()
         betas = self.betas.copy()
         for alpha in alphas:
@@ -45,27 +46,10 @@ class Solver:
                     minimum_beta = results[1]
         print("Minimum energy {} at alpha = {}, beta = {}".format(minimum_energy, minimum_alpha, minimum_beta))
         return minimum_alpha, minimum_beta, minimum_energy                      
-            
-#    def trial_wavefunction(self, r, system):
-#        r_sum = 0.0
-#        for i in range(system.number_of_particles):
-#            #loop over each particle
-#            r_ij_particle = 0.0
-#            for j in range(system.dimensions):
-#                r_ij_particle += r[i,j]**2
-#            r_sum += r_ij_particle
-#        wf = math.exp(-0.5*self.alpha*system.w*r_sum)
-#        if self.jastrow_bool == True:
-#            wf = self.jastrow(wf, r, system)
-#        return wf
-#        
-        
+
     def trial_wavefunction(self, system):
         r_sum = system.relative_distance_squared()
         wf = math.exp(-0.5*self.alpha*system.w*r_sum)
-        
-        if self.jastrow_bool == True:
-            wf = self.jastrow(wf,system)
         return wf
         
     def jastrow(self,wf,system):
@@ -77,77 +61,25 @@ class Solver:
                 arg = math.sqrt(r_12)
                 wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
+ 
         
-        
-#    def jastrow(self,wf,r,system):
-#        for i in range(system.number_of_particles-1):
-#            for j in range(i+1,system.number_of_particles):
-#                r_12 = 0.0
-#                for k in range(system.dimensions):
-#                    r_12 += (r[i,k] - r[j,k])**2
-#                arg = math.sqrt(r_12)
-#                wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
-#        return wf
-        #analytic expression version
-        #for i in range(system.number_of_particles)
-        
-    def local_energy(self,r, wf, system, h=0.001, h2 = 1E6):
-        '''Local energy using numerical derivative'''
-        #Kinetic energy
-        n_particles = system.number_of_particles
-        dimensions = system.dimensions
-        r_plus = r.copy()
-        r_minus = r.copy()
-        e_kinetic = 0.0
-        #numerical derivative
-        for i in range(n_particles):
-            for j in range(dimensions):
-                r_plus[i,j] = r[i,j] + h
-                r_minus[i,j] = r[i,j] - h
-                wf_minus = self.trial_wavefunction(r_minus, system)
-                wf_plus = self.trial_wavefunction(r_plus, system)
-                e_kinetic -= wf_minus+wf_plus-2*wf;
-                r_plus[i,j] = r[i,j]
-                r_minus[i,j] = r[i,j]
-        
-        e_kinetic = .5*h2*e_kinetic/wf
-        #Potential energy
-        e_potential = 0.0
-        #harmonic oscillator  contribution
-        for i in range(n_particles):
-            r_single_particle = 0.0
-            for j in range(dimensions):
-                r_single_particle += r[i,j]**2
-            e_potential += 0.5*r_single_particle
-    
-        #Electron-electron contribution
-        for i1 in range(n_particles-1):
-            for i2 in range(i1+1,n_particles):
-                r_12 = 0.0
-                for j in range(dimensions):
-                    r_12 += (r[i1,j] - r[i2,j])**2
-                if self.jastrow_bool == True:
-                    e_potential += 1.0/math.sqrt(r_12)
-        
-        return e_potential + e_kinetic
-        
-    def local_energy1(self, system):
+    def local_energy(self, system):
+        '''Local Energy using analytical expression. '''
         w = system.w
         energy = 0.0
         r_squared = 0.0
         for particle in system.particles:
             r_i = particle.r_squared()
             r_squared += r_i
-            
-        energy = 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
-        
-        #Coulomb repulsio
-        r_12 = system.particle_distance_squared()
+        energy += 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
+        #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
+        #Coulomb repulsion
+        #r_12 = system.particle_distance_squared()
         #energy += 1/r_12
             #old_position = particle.position
             #particle.random_move(old_position)
-                
         return energy
+        
     def local_energy2(self, r, wf, system):
         #local energy with coulomb interaction
         total_energy = 0.0
@@ -178,61 +110,120 @@ class Solver:
                 return r_12
         
     def MC_calculations(self,system, energy_min = 100.0):
-        #n_particles = system.number_of_particles
-        #dimensions = system.dimensions
-        step_length = self.step_length
         n_cycles = self.mc_cycles
-        #variations = self.variations
         #r_0 = np.zeros((n_particles,dimensions), np.double)
-#        r_n = np.zeros((n_particles,dimensions), np.double)
-        r_0 = system.position_matrix
+        #r_n = np.zeros((n_particles,dimensions), np.double)
         energy = energy2 = 0.0
         accept = 0.0
         delta_e = 0.0
-        #Initial position
 #        for i in range(n_particles):
 #            for j in range(dimensions):
 #                r_0[i,j] = step_length * (random() - .5)
         #Initial position
-        system.advance_time(step_length)
+        system.advance_time()
         wf_0 = self.trial_wavefunction(system)
+        #print("Initial wavefunction = {}".format(wf_0))
         for cycle in range(self.mc_cycles):
             #Trial position
-            system.advance_time(step_length)
-#            for i in range(n_particles):
-#                for j in range(dimensions):
-#                    r_n[i,j] = r_0[i,j] + step_length * (random() - .5)
-                    #r_n[i,j] = r_0[i,j] + step_length * (random.normal_distribution(0.0,1.0) - .5)
-            r_n = system.position_matrix
+            system.advance_time()
+            #r_n = system.position_matrix
             wf_n = self.trial_wavefunction(system)
-            
+            #print("New wavefunction = {}".format(wf_n))
+            #Jastrow Factor
+            #if self.jastrow_bool == True:
+                #wf_n = self.jastrow(wf_n,system)
             #Metropolis test to see whether we accept the move
-            if random() < wf_n**2 / wf_0**2:
-                r_0 = r_n.copy()
-                wf_0 = wf_n
-                accept += 1
-            #update expectation values
-            
-            #delta_e = self.local_energy(r_0, wf_0, system)
-            delta_e = self.local_energy1(system)
+            if wf_0 == 0 or random() < wf_n**2 / wf_0**2:
+                    #r_0 = r_n.copy()
+                    wf_0 = wf_n
+                    accept += 1
 
-            #delta_e = self.local_energy2(r_0, wf_0, system)
+            #update expectation values\            
+            delta_e = self.local_energy(system)
             energy += delta_e
             energy2 += delta_e**2
         #We calculate mean, variance and error ...
         energy /= n_cycles
         energy2 /= n_cycles
+        print("Energy = ", energy)
         variance = abs(energy2 - energy**2)
         error = math.sqrt(variance/n_cycles);
         results = self.alpha, self.beta, energy, variance, error, accept*1.0/n_cycles
         return results
-        
-            
             
     def write_to_file(self,outfile, results):    
-        #print(results)
         outfile.write('%f %f %f %f %f %f\n' %(results[0],results[1],results[2],results[3],results[4],results[5]))
             
+            
+            
+###############################################################################            
+#    def trial_wavefunction(self, r, system):
+#        r_sum = 0.0
+#        for i in range(system.number_of_particles):
+#            #loop over each particle
+#            r_ij_particle = 0.0
+#            for j in range(system.dimensions):
+#                r_ij_particle += r[i,j]**2
+#            r_sum += r_ij_particle
+#        wf = math.exp(-0.5*self.alpha*system.w*r_sum)
+#        if self.jastrow_bool == True:
+#            wf = self.jastrow(wf, r, system)
+#        return wf
+#        
+        
+#    def jastrow(self,wf,r,system):
+#        for i in range(system.number_of_particles-1):
+#            for j in range(i+1,system.number_of_particles):
+#                r_12 = 0.0
+#                for k in range(system.dimensions):
+#                    r_12 += (r[i,k] - r[j,k])**2
+#                arg = math.sqrt(r_12)
+#                wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
+#        return wf
+        #analytic expression version
+        #for i in range(system.number_of_particles)
+        
+#    def local_energy(self,r, wf, system, h=0.001, h2 = 1E6):
+#        '''Local energy using numerical derivative'''
+#        #Kinetic energy
+#        n_particles = system.number_of_particles
+#        dimensions = system.dimensions
+#        r_plus = r.copy()
+#        r_minus = r.copy()
+#        e_kinetic = 0.0
+#        #numerical derivative
+#        for i in range(n_particles):
+#            for j in range(dimensions):
+#                r_plus[i,j] = r[i,j] + h
+#                r_minus[i,j] = r[i,j] - h
+#                wf_minus = self.trial_wavefunction(r_minus, system)
+#                wf_plus = self.trial_wavefunction(r_plus, system)
+#                e_kinetic -= wf_minus+wf_plus-2*wf;
+#                r_plus[i,j] = r[i,j]
+#                r_minus[i,j] = r[i,j]
+#        
+#        e_kinetic = .5*h2*e_kinetic/wf
+#        #Potential energy
+#        e_potential = 0.0
+#        #harmonic oscillator  contribution
+#        for i in range(n_particles):
+#            r_single_particle = 0.0
+#            for j in range(dimensions):
+#                r_single_particle += r[i,j]**2
+#            e_potential += 0.5*r_single_particle
+#    
+#        #Electron-electron contribution
+#        for i1 in range(n_particles-1):
+#            for i2 in range(i1+1,n_particles):
+#                r_12 = 0.0
+#                for j in range(dimensions):
+#                    r_12 += (r[i1,j] - r[i2,j])**2
+#                if self.jastrow_bool == True:
+#                    e_potential += 1.0/math.sqrt(r_12)
+#        
+#        return e_potential + e_kinetic
+
+
             #outfile.write('%f %f %f %f %f %f\n' %(alpha,beta,avg_energy,variance,error,accept*1.0/(n_cycles)))
             #...and write them to file
 #        avg_energy = sum_energy/variations

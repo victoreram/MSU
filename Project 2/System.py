@@ -6,13 +6,14 @@ Created on Fri Jun  9 13:39:40 2017
 """
 from Particle import Particle
 class System:
-    def __init__(self,number_of_particles,dimensions,w):
+    def __init__(self,number_of_particles,dimensions,w,step_length):
         '''System(number_of_particles, dimensions, oscillator frequency w))'''
         self.number_of_particles = number_of_particles
         self.dimensions = dimensions
         self.w = w
+        self.step_length = step_length
         #Generate particles and store them in a list
-        self.particles = [Particle(self.dimensions) for p in range(number_of_particles)]
+        self.particles = [Particle(self.dimensions, step_length) for p in range(number_of_particles)]
         #Store each particle's position in a matrix        
         self.position_matrix = [particle.position for particle in self.particles]
         
@@ -22,6 +23,7 @@ class System:
         return string
         
     def particle_distance_squared(self):
+        '''Distance between particles'''
         n_particles = self.number_of_particles
         r_12 = 0.0
         for i1 in range(n_particles-1):
@@ -33,7 +35,7 @@ class System:
         return r_12
         
     def relative_distance_squared(self):
-        
+        '''Returns sum of relative distances among all particles'''
         r_sum = 0.0
         for i in range(self.number_of_particles):
             #loop over each particle
@@ -44,7 +46,7 @@ class System:
             
         return r_sum
         
-    def advance_time(self,step_length):
+    def advance_time(self):
         for particle in self.particles:
-            particle.move(step_length)
+            particle.random_move(self.step_length)
         

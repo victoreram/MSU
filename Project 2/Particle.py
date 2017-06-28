@@ -10,8 +10,9 @@ import math
 #from System import System
 
 class Particle:
-    def __init__(self, dimensions):
+    def __init__(self, dimensions=2, step_length=1.0):
         #dimensions = system.dimensions
+        self.step_length = step_length
         self.position = np.zeros(dimensions)
         
     def random_move(self, step_length=1.0):
@@ -37,20 +38,9 @@ class Particle:
         total = math.sqrt(arg)
         return total
         
-    def relative_distance_squared(self):
-        r_squared = 0.0
-        for coordinate in self.position:
-            r_squared += coordinate**2
-        return r_squared
         
     def r_squared(self):
         r_sum = 0.0
         for r in self.position:
             r_sum += r**2
         return r_sum
-
-            
-            
-#sys = System(2,2,1.0)
-e = Particle(2)
-e.random_move(1.0)
