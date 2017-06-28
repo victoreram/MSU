@@ -72,7 +72,7 @@ class Solver:
             r_i = particle.r_squared()
             r_squared += r_i
         energy += 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
-        #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
+        print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
         #Coulomb repulsion
         #r_12 = system.particle_distance_squared()
         #energy += 1/r_12
