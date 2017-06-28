@@ -15,9 +15,11 @@ import time
 
 def initialize(infile):
     '''Read line from file as parameters.
-    The format is cycles, step length, alpha, beta, 
-    jastrow factor (True or False), number of particles, dimensions, 
-    oscillator frequency w'''
+    The format:
+        line 1: cycles, step length, number of particles, dimensions, w,
+        starting value for alpha, starting value for beta, step size in alpha,
+        step size in beta, number of alpha variations, number of beta variations
+        line 2: jastrow factor enabled (bool), importance sampling enabled (bool)'''
     line_1 = infile.readline()
     params = line_1.split(',')
     cycles = eval(params[0])

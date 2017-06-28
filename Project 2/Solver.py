@@ -10,8 +10,8 @@ import numpy as np
 from random import random
 class Solver:
     def __init__(self, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations):
-        '''Solver(mc_cycles, alpha, beta, jastrow factor enabled
-        (True or False)), Hamiltonian'''
+        '''Solver(mc_cycles, alpha, beta, alpha step, beta step, 
+        number of alpha variations, numbe of beta variations'''
         self.alpha_variations = alpha_variations
         self.beta_variations = beta_variations
         self.mc_cycles = mc_cycles
