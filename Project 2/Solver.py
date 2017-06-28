@@ -9,7 +9,7 @@ import numpy as np
 #from System import System
 from random import random
 class Solver:
-    def __init__(self, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations,jastrow_bool):
+    def __init__(self, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations):
         '''Solver(mc_cycles, alpha, beta, jastrow factor enabled
         (True or False)), Hamiltonian'''
         self.alpha_variations = alpha_variations
@@ -17,7 +17,7 @@ class Solver:
         self.mc_cycles = mc_cycles
         self.alpha = alpha
         self.beta = beta
-        self.jastrow_bool = jastrow_bool
+        #self.hamiltonian = hamiltonian
         self.alpha_step = alpha_step
         self.beta_step = beta_step
         self.final_alpha = alpha + (alpha_variations-1)*alpha_step

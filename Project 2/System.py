@@ -6,12 +6,13 @@ Created on Fri Jun  9 13:39:40 2017
 """
 from Particle import Particle
 class System:
-    def __init__(self,number_of_particles,dimensions,w,step_length):
+    def __init__(self,number_of_particles,dimensions,w,step_length,alpha=1.0):
         '''System(number_of_particles, dimensions, oscillator frequency w))'''
         self.number_of_particles = number_of_particles
         self.dimensions = dimensions
         self.w = w
         self.step_length = step_length
+        self.alpha = alpha
         #Generate particles and store them in a list
         self.particles = [Particle(self.dimensions, step_length) for p in range(number_of_particles)]
         #Store each particle's position in a matrix        

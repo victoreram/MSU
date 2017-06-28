@@ -20,45 +20,45 @@ class Hamiltonian:
             
         self.system = system
         self.parameters = parameters
-        self.hamiltonians = {[False, False] : self.two_electron(system),
-                             [True, False] : self.two_electron_random_with_jastrow(system)}
+        self.hamiltonians = {[False, False] : self.two_electron(),
+                             [True, False] : self.two_electron_random_with_jastrow()}
         #self.value = self.Hamiltonians[parameters]
         
-    def two_electron(self, system):
+    def two_electron(self):
         '''Default:
         -Two Electron
         -Importance Sampling Disabled
         -Jastrow Factor Disabled'''
         '''Local Energy using analytical expression. '''
-        w = system.w
+        w = self.system.w
         energy = 0.0
         r_squared = 0.0
-        for particle in system.particles:
+        for particle in self.system.particles:
             r_i = particle.r_squared()
             r_squared += r_i
-        energy += 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
+        energy += 0.5*w**2*r_squared*(1-self.system.alpha**2) + 2*self.system.alpha*w
         #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
         return energy
     
     def two_electron_with_importance(self):
         pass
     
-    def two_electron_random_with_jastrow(self, system):
+    def two_electron_random_with_jastrow(self):
         '''
         -Two Electron
         -Importance Sampling Disabled
         -Jastrow Factor Disabled'''
         '''Local Energy using analytical expression. '''
-        w = system.w
+        w = self.system.w
         energy = 0.0
         r_squared = 0.0
-        for particle in system.particles:
+        for particle in self.system.particles:
             r_i = particle.r_squared()
             r_squared += r_i
-        energy += 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
+        energy += 0.5*w**2*r_squared*(1-self.system.alpha**2) + 2*self.system.alpha*w
         #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
         #Coulomb repulsion
-        r_12 = system.particle_distance_squared()
+        r_12 = self.system.particle_distance_squared()
         energy += 1/r_12
         #old_position = particle.position
         #particle.random_move(old_position)

@@ -34,9 +34,13 @@ def initialize(infile):
     line_2 = infile.readline()
     bool_params = line_2.split(',')
     jastrow_bool = eval(bool_params[0])
+    importance_bool = eval(bool_params[1])
     system = System(n_particles,dimensions,w, step_length)
-    solver = Solver(cycles,alpha_0,beta_0,alpha_step,beta_step,alpha_variations,beta_variations,jastrow_bool)
-    return solver, system
+    bool_params = [jastrow_bool, importance_bool]
+    #hamiltonian_library = H(bool_params,system)
+    #hamiltonian = hamiltonian_library.hamiltonians[bool_params]
+    solver = Solver(cycles,alpha_0,beta_0,alpha_step,beta_step,alpha_variations,beta_variations)
+    return solver, system, bool_params#, hamiltonian
 
 def get_params():
     infilename = input("Enter the input file name: ")
@@ -54,7 +58,8 @@ def get_params():
     return infile, outfile
     
 infile, outfile = get_params()
-solver, system = initialize(infile)
+solver, system, bool_params = initialize(infile)
+#solver, system, hamiltonian = intiialize(infile)
 parameter_string = '''
 ***Parameters***
 Monte Carlo cycles: {}
@@ -62,10 +67,11 @@ Step length: {}
 {} Alpha variations in range:  {}-{}
 {} Beta variations in range: {}-{}
 Jastrow factor enabled? {}
+Importance sampling enabled? {}
 Number of particles: {}
 Dimensions: {}
 Oscillator Frequency w: {}
-'''.format(solver.mc_cycles,system.step_length,solver.alpha_variations,solver.alpha,solver.final_alpha,solver.beta_variations,solver.beta,solver.final_beta,solver.jastrow_bool,system.number_of_particles,system.dimensions,system.w)
+'''.format(solver.mc_cycles,system.step_length,solver.alpha_variations,solver.alpha,solver.final_alpha,solver.beta_variations,solver.beta,solver.final_beta,bool_params[0],bool_params[1],system.number_of_particles,system.dimensions,system.w)
 print(parameter_string)
 t_i = time.time()
 
