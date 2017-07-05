@@ -9,7 +9,7 @@ import numpy as np
 #from System import System
 from random import random
 class Solver:
-    def __init__(self, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations):
+    def __init__(self, system, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations):
         '''Solver(mc_cycles, alpha, beta, alpha step, beta step, 
         number of alpha variations, numbe of beta variations'''
         self.alpha_variations = alpha_variations
@@ -24,9 +24,14 @@ class Solver:
         self.final_beta = beta + (beta_variations-1)*beta_step
         self.alphas = np.linspace(alpha,self.final_alpha,alpha_variations)
         self.betas = np.linspace(beta,self.final_beta,beta_variations)
+        self.system = system
+        #precalculated parameters
+        self.two_alpha_w = 2*alpha*self.system.w
+        self.one_minus_alpha_squared = 1-self.alpha**2
+        self.half_omega_squared = 0.5*self.system.w**2
         #self.hamiltonian = hamiltonian
         
-    def optimize_parameters(self, system, outfile, minimum_energy=1000.0):
+    def optimize_parameters(self, outfile, minimum_energy=1E9):
         '''Test varational parameters. Default parameters include alpha
         and beta'''
         alphas = self.alphas.copy()
@@ -37,7 +42,7 @@ class Solver:
                 self.alpha = alpha
                 self.beta = beta
                 print("calculating alpha = {}, beta = {}...".format(alpha,beta))
-                results = self.MC_calculations(system)
+                results = self.MC_calculations()
                 self.write_to_file(outfile,results)
                 energy = results[2]
                 if energy < minimum_energy:
@@ -47,9 +52,9 @@ class Solver:
         print("Minimum energy {} at alpha = {}, beta = {}".format(minimum_energy, minimum_alpha, minimum_beta))
         return minimum_alpha, minimum_beta, minimum_energy                      
 
-    def trial_wavefunction(self, system):
-        r_sum = system.relative_distance_squared()
-        wf = math.exp(-0.5*self.alpha*system.w*r_sum)
+    def trial_wavefunction(self):
+        r_sum = self.system.relative_distance_squared()
+        wf = math.exp(-0.5*self.alpha*self.system.w*r_sum)
         return wf
         
     def jastrow(self,wf,system):
@@ -63,16 +68,24 @@ class Solver:
         return wf
  
         
-    def local_energy(self, system):
+    def local_energy(self, a = 1.0):
         '''Local Energy using analytical expression. '''
-        w = system.w
+        w = self.system.w
+        alpha = self.alpha
+        beta = self.beta
         energy = 0.0
-        r_squared = 0.0
-        for particle in system.particles:
-            r_i = particle.r_squared()
-            r_squared += r_i
-        energy += 0.5*w**2*r_squared*(1-self.alpha**2) + 2*self.alpha*w
-        print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
+        r_1_squared_plus_r_2_squared = self.system.relative_distance_squared()
+        r_12 = math.sqrt(self.system.particle_distance_squared())
+        r_12_inverse = 1/r_12
+        one_plus_beta_r_12 = 1+self.beta*r_12
+        
+        #calculation of energy from A.1.18 of Christian's Thesis
+        energy += self.half_omega_squared*r_1_squared_plus_r_2_squared*self.one_minus_alpha_squared
+        #energy -= 2*a*beta/(one_plus_beta_r_12**3)
+        #energy -= a**2/(one_plus_beta_r_12**4)
+        #energy += (alpha*w*r_12 + r_12_inverse)*a/(one_plus_beta_r_12**2)
+        #energy += r_12_inverse
+        #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
         #Coulomb repulsion
         #r_12 = system.particle_distance_squared()
         #energy += 1/r_12
@@ -98,9 +111,9 @@ class Solver:
             total_energy += 2*denom*(a*denom + 1/r_12 - 2*self.beta/(1+self.beta*r_12))
         return total_energy
         
-    def relative_distance(self, system,r):
-        n_particles = system.number_of_particles
-        dimensions = system.dimensions
+    def relative_distance(self, r):
+        n_particles = self.system.number_of_particles
+        dimensions = self.system.dimensions
         for i1 in range(n_particles-1):
             for i2 in range(i1+1, n_particles):
                 r_12 = 0.0
@@ -109,7 +122,7 @@ class Solver:
                     
                 return r_12
         
-    def MC_calculations(self,system, energy_min = 100.0):
+    def MC_calculations(self, energy_min = 1.0E9):
         n_cycles = self.mc_cycles
         #r_0 = np.zeros((n_particles,dimensions), np.double)
         #r_n = np.zeros((n_particles,dimensions), np.double)
@@ -120,18 +133,16 @@ class Solver:
 #            for j in range(dimensions):
 #                r_0[i,j] = step_length * (random() - .5)
         #Initial position
-        system.advance_time()
-        wf_0 = self.trial_wavefunction(system)
+        self.system.advance_time()
+        wf_0 = self.trial_wavefunction()
+        #energy += self.two_alpha_w*self.mc_cycles
         #print("Initial wavefunction = {}".format(wf_0))
         for cycle in range(self.mc_cycles):
             #Trial position
-            system.advance_time()
+            self.system.advance_time()
+            energy += self.two_alpha_w
             #r_n = system.position_matrix
-            wf_n = self.trial_wavefunction(system)
-            #print("New wavefunction = {}".format(wf_n))
-            #Jastrow Factor
-            #if self.jastrow_bool == True:
-                #wf_n = self.jastrow(wf_n,system)
+            wf_n = self.trial_wavefunction()
             #Metropolis test to see whether we accept the move
             if wf_0 == 0 or random() < wf_n**2 / wf_0**2:
                     #r_0 = r_n.copy()
@@ -139,7 +150,7 @@ class Solver:
                     accept += 1
 
             #update expectation values\            
-            delta_e = self.local_energy(system)
+            delta_e = self.local_energy()
             energy += delta_e
             energy2 += delta_e**2
         #We calculate mean, variance and error ...
@@ -151,7 +162,7 @@ class Solver:
         results = self.alpha, self.beta, energy, variance, error, accept*1.0/n_cycles
         return results
             
-    def write_to_file(self,outfile, results):    
+    def write_to_file(self,outfile,results):    
         outfile.write('%f %f %f %f %f %f\n' %(results[0],results[1],results[2],results[3],results[4],results[5]))
             
             

@@ -41,7 +41,7 @@ def initialize(infile):
     bool_params = [jastrow_bool, importance_bool]
     #hamiltonian_library = H(bool_params,system)
     #hamiltonian = hamiltonian_library.hamiltonians[bool_params]
-    solver = Solver(cycles,alpha_0,beta_0,alpha_step,beta_step,alpha_variations,beta_variations)
+    solver = Solver(system, cycles,alpha_0,beta_0,alpha_step,beta_step,alpha_variations,beta_variations)
     return solver, system, bool_params#, hamiltonian
 
 def get_params():
@@ -77,7 +77,7 @@ Oscillator Frequency w: {}
 print(parameter_string)
 t_i = time.time()
 
-solver.optimize_parameters(system, outfile)
+solver.optimize_parameters(outfile)
 infile.close()
 outfile.close()
 print('\nDone. Results are in the output file, formatted as:\n\
