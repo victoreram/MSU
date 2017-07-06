@@ -175,21 +175,21 @@ void MonteCarloSampling(int NumberMCsamples, double &cumulative_e, double &cumul
   QuantumForce(OldPosition, OldQuantumForce, VariationalParameters);
   // loop over monte carlo cycles 
   for (int cycles = 1; cycles <= NumberMCsamples; cycles++){ 
-    // new position 
-    for (int i = 0; i < NumberParticles; i++) { 
-      for (int j = 0; j < Dimension; j++) {
-	// gaussian deviate to compute new positions using a given timestep
-	NewPosition(i,j) = OldPosition(i,j) + Normaldistribution(gen)*sqrt(timestep)+OldQuantumForce(i,j)*timestep*D;
-	//	NewPosition(i,j) = OldPosition(i,j) + gaussian_deviate(&idum)*sqrt(timestep)+OldQuantumForce(i,j)*timestep*D;
-      }  
+    // new position
+    for (int i = 0; i < NumberParticles; i++) {
+        for (int j = 0; j < Dimension; j++) {
+        // gaussian deviate to compute new positions using a given timestep
+        NewPosition(i,j) = OldPosition(i,j) + Normaldistribution(gen)*sqrt(timestep)+OldQuantumForce(i,j)*timestep*D;
+        //	NewPosition(i,j) = OldPosition(i,j) + gaussian_deviate(&idum)*sqrt(timestep)+OldQuantumForce(i,j)*timestep*D;
+        }
       //  for the other particles we need to set the position to the old position since
       //  we move only one particle at the time
-      for (int k = 0; k < NumberParticles; k++) {
-	if ( k != i) {
-	  for (int j = 0; j < Dimension; j++) {
-	    NewPosition(k,j) = OldPosition(k,j);
-	  }
-	} 
+        for (int k = 0; k < NumberParticles; k++) {
+            if ( k != i) {
+                for (int j = 0; j < Dimension; j++) {
+                    NewPosition(k,j) = OldPosition(k,j);
+                }
+            }
       }
       double NewWaveFunction = WaveFunction(NewPosition, VariationalParameters); 
       QuantumForce(NewPosition, NewQuantumForce, VariationalParameters);
