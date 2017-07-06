@@ -25,10 +25,19 @@ class Solver:
         self.alphas = np.linspace(alpha,self.final_alpha,alpha_variations)
         self.betas = np.linspace(beta,self.final_beta,beta_variations)
         self.system = system
-        #precalculated parameters
-        self.two_alpha_w = 2*alpha*self.system.w
-        self.one_minus_alpha_squared = 1-self.alpha**2
-        self.half_omega_squared = 0.5*self.system.w**2
+    #precalculated parameters
+    @property 
+    def two_alpha_w(self):
+        return 2*self.alpha*self.system.w
+    
+    @property
+    def one_minus_alpha_squared(self):
+        return 1-self.alpha**2
+        
+    @property
+    def half_omega_squared(self):
+        return 0.5*self.system.w**2
+        
         #self.hamiltonian = hamiltonian
         
     def optimize_parameters(self, outfile, minimum_energy=1E9):
@@ -55,14 +64,18 @@ class Solver:
     def trial_wavefunction(self):
         r_sum = self.system.relative_distance_squared()
         wf = math.exp(-0.5*self.alpha*self.system.w*r_sum)
+        #Jastrow Factor
+        #wf *= self.jastrow(wf)
+        #arg = self.system.particle_distance_squared(r_sum)
+        #wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
         
-    def jastrow(self,wf,system):
-        for i in range(system.number_of_particles-1):
-            for j in range(i+1,system.number_of_particles):
+    def jastrow(self,wf):
+        for i in range(self.system.number_of_particles-1):
+            for j in range(i+1,self.system.number_of_particles):
                 r_12 = 0.0
-                for k in range(system.dimensions):
-                    r_12 += (system.position_matrix[i][k] - system.position_matrix[j][k])**2
+                for k in range(self.system.dimensions):
+                    r_12 += (self.system.position_matrix[i][k] - self.system.position_matrix[j][k])**2
                 arg = math.sqrt(r_12)
                 wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
@@ -75,7 +88,7 @@ class Solver:
         beta = self.beta
         energy = 0.0
         r_1_squared_plus_r_2_squared = self.system.relative_distance_squared()
-        r_12 = math.sqrt(self.system.particle_distance_squared())
+        r_12 = self.system.particle_distance_squared()
         r_12_inverse = 1/r_12
         one_plus_beta_r_12 = 1+self.beta*r_12
         
@@ -93,34 +106,34 @@ class Solver:
             #particle.random_move(old_position)
         return energy
         
-    def local_energy2(self, r, wf, system):
-        #local energy with coulomb interaction
-        total_energy = 0.0
-        #2 electron case, ground state, opposite spins, a= 1.0
-        a = 1.0
-        for i in range(system.number_of_particles):
-            r_single_particle = 0.0
-            for j in range(system.dimensions):
-                r_single_particle += r[i,j]**2 #Why not just r[i,j]?
-            
-            r_12 = math.sqrt(r_single_particle)
-            denom = a/((1+self.beta*r_12)**2)
-            total_energy += 2*self.alpha**2*system.w*r_single_particle
-            total_energy -= 4*self.alpha*system.w
-            total_energy -= 2*self.alpha*system.w*denom
-            total_energy += 2*denom*(a*denom + 1/r_12 - 2*self.beta/(1+self.beta*r_12))
-        return total_energy
-        
-    def relative_distance(self, r):
-        n_particles = self.system.number_of_particles
-        dimensions = self.system.dimensions
-        for i1 in range(n_particles-1):
-            for i2 in range(i1+1, n_particles):
-                r_12 = 0.0
-                for j in range(dimensions):
-                    r_12 += (r[i1,j] - r[i2,j])**2
-                    
-                return r_12
+#    def local_energy2(self, r, wf, system):
+#        #local energy with coulomb interaction
+#        total_energy = 0.0
+#        #2 electron case, ground state, opposite spins, a= 1.0
+#        a = 1.0
+#        for i in range(system.number_of_particles):
+#            r_single_particle = 0.0
+#            for j in range(system.dimensions):
+#                r_single_particle += r[i,j]**2 #Why not just r[i,j]?
+#            
+#            r_12 = math.sqrt(r_single_particle)
+#            denom = a/((1+self.beta*r_12)**2)
+#            total_energy += 2*self.alpha**2*system.w*r_single_particle
+#            total_energy -= 4*self.alpha*system.w
+#            total_energy -= 2*self.alpha*system.w*denom
+#            total_energy += 2*denom*(a*denom + 1/r_12 - 2*self.beta/(1+self.beta*r_12))
+#        return total_energy
+#        
+#    def relative_distance(self, r):
+#        n_particles = self.system.number_of_particles
+#        dimensions = self.system.dimensions
+#        for i1 in range(n_particles-1):
+#            for i2 in range(i1+1, n_particles):
+#                r_12 = 0.0
+#                for j in range(dimensions):
+#                    r_12 += (r[i1,j] - r[i2,j])**2
+#                    
+#                return r_12
         
     def MC_calculations(self, energy_min = 1.0E9):
         n_cycles = self.mc_cycles
@@ -149,7 +162,7 @@ class Solver:
                     wf_0 = wf_n
                     accept += 1
 
-            #update expectation values\            
+            #update expectation values            
             delta_e = self.local_energy()
             energy += delta_e
             energy2 += delta_e**2

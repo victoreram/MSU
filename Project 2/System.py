@@ -5,6 +5,7 @@ Created on Fri Jun  9 13:39:40 2017
 @author: ramir
 """
 from Particle import Particle
+import math
 class System:
     def __init__(self,number_of_particles,dimensions,w,step_length,alpha=1.0):
         '''System(number_of_particles, dimensions, oscillator frequency w))'''
@@ -23,7 +24,7 @@ class System:
         '''.format(self.number_of_particles, self.dimensions, self.w)
         return string
         
-    def particle_distance_squared(self):
+    def particle_distance_squared(self, argument = 0.0):
         '''Distance between particles'''
         n_particles = self.number_of_particles
         r_12 = 0.0
@@ -32,8 +33,12 @@ class System:
                 #r_12 = 0.0 here originally
                 particle_1 = self.particles[i1]
                 particle_2  = self.particles[i2]
-                r_12 += particle_1.distance_difference(particle_2.position)
-        return r_12
+                for j in range(self.dimensions):
+                    r_12 += (particle_1.position[j]-particle_2.position[j])**2
+                argument += math.sqrt(r_12)
+                #wf *= math.exp(0.5*argument/(1.0+0.3*argument))
+                #r_12 += particle_1.distance_difference(particle_2.position)
+        return argument
         
     def relative_distance_squared(self):
         '''Returns sum of relative distances among all particles'''
