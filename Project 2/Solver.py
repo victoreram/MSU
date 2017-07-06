@@ -88,18 +88,18 @@ class Solver:
         beta = self.beta
         energy = 0.0
         r_1_squared_plus_r_2_squared = self.system.relative_distance_squared()
-        r_12 = self.system.particle_distance_squared()
-        r_12_inverse = 1/r_12
-        one_plus_beta_r_12 = 1+self.beta*r_12
+        #r_12 = math.sqrt(self.system.particle_distance_squared())
+        #r_12_inverse = 1/r_12
+        #one_plus_beta_r_12 = 1+self.beta*r_12
         
         #calculation of energy from A.1.18 of Christian's Thesis
         energy += self.half_omega_squared*r_1_squared_plus_r_2_squared*self.one_minus_alpha_squared
         #energy -= 2*a*beta/(one_plus_beta_r_12**3)
         #energy -= a**2/(one_plus_beta_r_12**4)
         #energy += (alpha*w*r_12 + r_12_inverse)*a/(one_plus_beta_r_12**2)
+        #Coulomb repulsion        
         #energy += r_12_inverse
         #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
-        #Coulomb repulsion
         #r_12 = system.particle_distance_squared()
         #energy += 1/r_12
             #old_position = particle.position
@@ -148,16 +148,16 @@ class Solver:
         #Initial position
         self.system.advance_time()
         wf_0 = self.trial_wavefunction()
-        #energy += self.two_alpha_w*self.mc_cycles
+        energy += self.two_alpha_w*self.mc_cycles
         #print("Initial wavefunction = {}".format(wf_0))
         for cycle in range(self.mc_cycles):
             #Trial position
             self.system.advance_time()
-            energy += self.two_alpha_w
+            #energy += self.two_alpha_w
             #r_n = system.position_matrix
             wf_n = self.trial_wavefunction()
             #Metropolis test to see whether we accept the move
-            if wf_0 == 0 or random() < wf_n**2 / wf_0**2:
+            if random() < wf_n**2 / wf_0**2:
                     #r_0 = r_n.copy()
                     wf_0 = wf_n
                     accept += 1

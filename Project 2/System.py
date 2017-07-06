@@ -14,20 +14,24 @@ class System:
         self.w = w
         self.step_length = step_length
         self.alpha = alpha
-        #Generate particles and store them in a list
-        self.particles = [Particle(self.dimensions, step_length) for p in range(number_of_particles)]
-        #Store each particle's position in a matrix        
-        self.position_matrix = [particle.position for particle in self.particles]
+    #Generate particles and store them in a list
+    @property
+    def particles(self):
+        return [Particle(self.dimensions, self.step_length) for p in range(self.number_of_particles)]
+    #Store each particle's position in a matrix 
+    @property
+    def position_matrix(self):
+        return [particle.position for particle in self.particles]
         
     def __str__(self):
         string = '''***SYSTEM PARAMETERS***\nNumber of particles: {}\nDimensions: {}\nOscillator frequency w: {}
         '''.format(self.number_of_particles, self.dimensions, self.w)
         return string
         
-    def particle_distance_squared(self, argument = 0.0):
+    def particle_distance_squared(self, r_12 = 0.0):
         '''Distance between particles'''
         n_particles = self.number_of_particles
-        r_12 = 0.0
+        r_12
         for i1 in range(n_particles-1):
             for i2 in range(i1+1,n_particles):
                 #r_12 = 0.0 here originally
@@ -35,10 +39,10 @@ class System:
                 particle_2  = self.particles[i2]
                 for j in range(self.dimensions):
                     r_12 += (particle_1.position[j]-particle_2.position[j])**2
-                argument += math.sqrt(r_12)
+
                 #wf *= math.exp(0.5*argument/(1.0+0.3*argument))
                 #r_12 += particle_1.distance_difference(particle_2.position)
-        return argument
+        return r_12
         
     def relative_distance_squared(self):
         '''Returns sum of relative distances among all particles'''
