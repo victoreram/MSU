@@ -45,6 +45,7 @@ def initialize(infile):
     return solver, system, bool_params#, hamiltonian
 
 def get_params():
+    '''Takes parameters from input file'''
     infilename = input("Enter the input file name: ")
     if infilename == '':
         infilename = 'in.txt'

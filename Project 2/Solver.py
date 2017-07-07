@@ -6,26 +6,28 @@ Created on Fri Jun  9 13:42:20 2017
 """
 import math
 import numpy as np
-#from System import System
+from System import System
+from Particle import Particle
 from random import random
 class Solver:
     def __init__(self, system, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations):
         '''Solver(mc_cycles, alpha, beta, alpha step, beta step, 
         number of alpha variations, numbe of beta variations'''
+        self.system = system        
         self.alpha_variations = alpha_variations
         self.beta_variations = beta_variations
         self.mc_cycles = mc_cycles
         self.alpha = alpha
         self.beta = beta
         #self.hamiltonian = hamiltonian
+        #range of parameters to check; doesn't change with changing alpha
         self.alpha_step = alpha_step
         self.beta_step = beta_step
         self.final_alpha = alpha + (alpha_variations-1)*alpha_step
         self.final_beta = beta + (beta_variations-1)*beta_step
         self.alphas = np.linspace(alpha,self.final_alpha,alpha_variations)
         self.betas = np.linspace(beta,self.final_beta,beta_variations)
-        self.system = system
-    #precalculated parameters
+    #precalculated parameters that update with changing alpha, omega
     @property 
     def two_alpha_w(self):
         return 2*self.alpha*self.system.w
@@ -38,22 +40,30 @@ class Solver:
     def half_omega_squared(self):
         return 0.5*self.system.w**2
         
-        #self.hamiltonian = hamiltonian
-        
     def optimize_parameters(self, outfile, minimum_energy=1E9):
         '''Test varational parameters. Default parameters include alpha
         and beta'''
         alphas = self.alphas.copy()
         betas = self.betas.copy()
+        number_of_particles = self.system.number_of_particles
+        dimensions = self.system.dimensions
+        w = self.system.w
+        step_length = self.system.step_length
         for alpha in alphas:
             for beta in betas:
-                #find minimum
+                #change variational parameters of solver
                 self.alpha = alpha
                 self.beta = beta
+                #reinitialize particles in system to beginning postion after each set of alpha and beta               
+                self.system = System(number_of_particles,dimensions,w,step_length)
+#                self.system.particles = [Particle(dimensions, step_length) for p in range(number_of_particles)]
+#                self.system.position_matrix = [np.zeros(dimensions) for particle in range(number_of_particles)]
+                #print("Inintial relative distance = ", self.system.position_matrix)
                 print("calculating alpha = {}, beta = {}...".format(alpha,beta))
                 results = self.MC_calculations()
                 self.write_to_file(outfile,results)
                 energy = results[2]
+                #find mininmum
                 if energy < minimum_energy:
                     minimum_energy = energy
                     minimum_alpha = results[0]
@@ -65,7 +75,7 @@ class Solver:
         r_sum = self.system.relative_distance_squared()
         wf = math.exp(-0.5*self.alpha*self.system.w*r_sum)
         #Jastrow Factor
-        #wf *= self.jastrow(wf)
+        #wf = self.jastrow(wf)
         #arg = self.system.particle_distance_squared(r_sum)
         #wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
@@ -88,12 +98,13 @@ class Solver:
         beta = self.beta
         energy = 0.0
         r_1_squared_plus_r_2_squared = self.system.relative_distance_squared()
-        #r_12 = math.sqrt(self.system.particle_distance_squared())
-        #r_12_inverse = 1/r_12
-        #one_plus_beta_r_12 = 1+self.beta*r_12
-        
+        #print("Particle coordinates: {}, r_1^2 + r_2^2 = {} ".format( self.system.position_matrix, r_1_squared_plus_r_2_squared))
+        r_12 = math.sqrt(self.system.particle_distance_squared())
+        r_12_inverse = 1/r_12
+        one_plus_beta_r_12 = 1+self.beta*r_12
         #calculation of energy from A.1.18 of Christian's Thesis
         energy += self.half_omega_squared*r_1_squared_plus_r_2_squared*self.one_minus_alpha_squared
+        #print("delta e = {}*{}*{} = {}".format(self.half_omega_squared,r_1_squared_plus_r_2_squared,self.one_minus_alpha_squared,energy))
         #energy -= 2*a*beta/(one_plus_beta_r_12**3)
         #energy -= a**2/(one_plus_beta_r_12**4)
         #energy += (alpha*w*r_12 + r_12_inverse)*a/(one_plus_beta_r_12**2)
@@ -102,8 +113,6 @@ class Solver:
         #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
         #r_12 = system.particle_distance_squared()
         #energy += 1/r_12
-            #old_position = particle.position
-            #particle.random_move(old_position)
         return energy
         
 #    def local_energy2(self, r, wf, system):
@@ -142,10 +151,13 @@ class Solver:
         energy = energy2 = 0.0
         accept = 0.0
         delta_e = 0.0
+        #iters=0
 #        for i in range(n_particles):
 #            for j in range(dimensions):
 #                r_0[i,j] = step_length * (random() - .5)
         #Initial position
+        #print("Initial position: ", self.system.position_matrix)
+
         self.system.advance_time()
         wf_0 = self.trial_wavefunction()
         energy += self.two_alpha_w*self.mc_cycles
@@ -153,19 +165,22 @@ class Solver:
         for cycle in range(self.mc_cycles):
             #Trial position
             self.system.advance_time()
+            #print("Particle coordinates: ", self.system.position_matrix)
             #energy += self.two_alpha_w
-            #r_n = system.position_matrix
             wf_n = self.trial_wavefunction()
             #Metropolis test to see whether we accept the move
-            if random() < wf_n**2 / wf_0**2:
-                    #r_0 = r_n.copy()
+            #get ZeroDivisionError without "if wf_0 == 0.0"
+            if wf_0 == 0.0 or random() < wf_n**2 / wf_0**2:
                     wf_0 = wf_n
                     accept += 1
-
+                
             #update expectation values            
             delta_e = self.local_energy()
             energy += delta_e
             energy2 += delta_e**2
+            #print("{} + {} = {}".format(old_energy,delta_e,energy))
+
+            #iters += 1
         #We calculate mean, variance and error ...
         energy /= n_cycles
         energy2 /= n_cycles
