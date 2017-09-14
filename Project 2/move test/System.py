@@ -60,9 +60,12 @@ class System:
 #        for particle in self.particles:
 #            particle.random_move(self.step_length)
         '''Move one particle at a time'''
-        for p in range(len(self.particles)-1):
-            self.particles[p].random_move(self.step_length)
-        self.position_matrix = [particle.position for particle in self.particles]
+        temp_position_matrix = self.position_matrix.copy()
+        for p in range(len(self.particles)):
+            temp_position_matrix[p] = self.particles[p].random_move(self.step_length)
+            
+        return temp_position_matrix
+        #self.position_matrix = [particle.position for particle in self.particles]
         #print(self.position_matrix)
 
         

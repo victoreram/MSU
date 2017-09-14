@@ -19,6 +19,9 @@ class Solver:
         self.mc_cycles = mc_cycles
         self.alpha = alpha
         self.beta = beta
+        self.wf = 1.0
+        self.h = 0.001
+        self.h2 = 1/(self.h**2)
         #self.hamiltonian = hamiltonian
         #range of parameters to check; doesn't change with changing alpha
         self.alpha_step = alpha_step
@@ -71,9 +74,9 @@ class Solver:
         print("Minimum energy {} at alpha = {}, beta = {}".format(minimum_energy, minimum_alpha, minimum_beta))
         return minimum_alpha, minimum_beta, minimum_energy                      
 
-    def trial_wavefunction(self):
+    def trial_wavefunction(self,r):
         wf = 1.0
-        r_1_squared_plus_r_2_squared = self.system.r_sum_squared()
+        r_1_squared_plus_r_2_squared = self.system.r_sum_squared(r)
         wf *= math.exp(-0.5*self.alpha*self.system.w*r_1_squared_plus_r_2_squared)
 #        for p in range(self.system.number_of_particles):
 #            r_sum = self.system.relative_distance_squared(p)
@@ -94,31 +97,50 @@ class Solver:
                 wf *= math.exp(0.5*arg/(1.0+self.beta*arg))
         return wf
  
-        
-    def local_energy(self, a = 1.0):
-        '''Local Energy using analytical expression. '''
-        w = self.system.w
-        alpha = self.alpha
-        beta = self.beta
+    def local_energy(self,a = 1.0):
+        '''Local Energy using numerical derivatives. '''
+        r = self.system.position_matrix.copy()
+        r_plus = r.copy()
+        r_minus = r.copy()
         energy = 0.0
-        #energy += self.two_alpha_w
-        r_1_squared_plus_r_2_squared = self.system.r_sum_squared()
-        #print("Particle coordinates: {}, r_1^2 + r_2^2 = {} ".format( self.system.position_matrix, r_1_squared_plus_r_2_squared))
-        #r_12 = math.sqrt(self.system.particle_distance_squared())
-        #r_12_inverse = 1/r_12
-        #one_plus_beta_r_12 = 1+self.beta*r_12
-        #calculation of energy from A.1.18 of Christian's Thesis
-        energy += self.half_omega_squared*r_1_squared_plus_r_2_squared*self.one_minus_alpha_squared
-        #print("delta e = {}*{}*{} = {}".format(self.half_omega_squared,r_1_squared_plus_r_2_squared,self.one_minus_alpha_squared,energy))
-        #energy -= 2*a*beta/(one_plus_beta_r_12**3)
-        #energy -= a**2/(one_plus_beta_r_12**4)
-        #energy += (alpha*w*r_12 + r_12_inverse)*a/(one_plus_beta_r_12**2)
-        #Coulomb repulsion        
-        #energy += r_12_inverse
-        #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
-        #r_12 = system.particle_distance_squared()
-        #energy += 1/r_12
-        return energy
+        e_kinetic = 0.0
+        wf = self.wf
+        for i in range(self.system.number_of_particles):
+            for j in range(self.system.dimensions):
+                r_plus[i][j] = r[i][j] + self.h
+                r_minus[i][j] = r[i][j] - self.h
+                wf_minus = self.trial_wavefunction(r_minus)
+                wf_plus = self.trial_wavefunction(r_plus)
+                e_kinetic -= wf_minus + wf_plus - 2*wf
+                r_plus[i][j] = r[i][j]
+                r_minus[i][j] = r[i][j]
+        e_kinetic = 0.5*self.h2*e_kinetic/wf
+        energy += e_kinetic
+        return energy   
+#    def local_energy(self, a = 1.0):
+#        '''Local Energy using analytical expression. '''
+#        w = self.system.w
+#        alpha = self.alpha
+#        beta = self.beta
+#        energy = 0.0
+#        #energy += self.two_alpha_w
+#        r_1_squared_plus_r_2_squared = self.system.r_sum_squared()
+#        #print("Particle coordinates: {}, r_1^2 + r_2^2 = {} ".format( self.system.position_matrix, r_1_squared_plus_r_2_squared))
+#        #r_12 = math.sqrt(self.system.particle_distance_squared())
+#        #r_12_inverse = 1/r_12
+#        #one_plus_beta_r_12 = 1+self.beta*r_12
+#        #calculation of energy from A.1.18 of Christian's Thesis
+#        #energy += self.half_omega_squared*r_1_squared_plus_r_2_squared*self.one_minus_alpha_squared
+#        #print("delta e = {}*{}*{} = {}".format(self.half_omega_squared,r_1_squared_plus_r_2_squared,self.one_minus_alpha_squared,energy))
+#        #energy -= 2*a*beta/(one_plus_beta_r_12**3)
+#        #energy -= a**2/(one_plus_beta_r_12**4)
+#        #energy += (alpha*w*r_12 + r_12_inverse)*a/(one_plus_beta_r_12**2)
+#        #Coulomb repulsion        
+#        #energy += r_12_inverse
+#        #print("Energy = 0.5*{}^2*{}*(1-{}^2) + 2*{}*w = {}".format(w,round(r_squared,2),self.alpha,self.alpha,energy))
+#        #r_12 = system.particle_distance_squared()
+#        #energy += 1/r_12
+#        return energy
         
     def quantum_force(self):
         
@@ -195,23 +217,32 @@ class Solver:
 #            for j in range(dimensions):
 #                r_0[i,j] = step_length * (random() - .5)
         #Initial position
-        #print("Initial position: ", self.system.position_matrix)
+        print("Initial position: ", self.system.position_matrix)
 
         self.system.advance_time()
-        wf_0 = self.trial_wavefunction()
+        wf_0 = self.trial_wavefunction(self.system.position_matrix)
+        self.wf = wf_0
+        r_0 = self.system.position_matrix.copy()
         #energy += self.two_alpha_w*self.mc_cycles
         #print("Initial wavefunction = {}".format(wf_0))
         for cycle in range(self.mc_cycles):
             #Trial position
-            self.system.advance_time()
-            #print("Particle coordinates: ", self.system.position_matrix)
-            #energy += self.two_alpha_w
-            wf_n = self.trial_wavefunction()
+        
+            print(self.system.position_matrix)
+            r_new = self.system.advance_time()            
+            wf_n = self.trial_wavefunction(self.system.position_matrix)
             #Metropolis test to see whether we accept the move
             #get ZeroDivisionError without "if wf_0 == 0.0"
-            if wf_0 == 0.0 or random() < wf_n**2 / wf_0**2:
-                    wf_0 = wf_n
-                    accept += 1
+            if wf_0 == 0.0 or random() < wf_n**2 / wf_0**2: #CHECK THIS LINE WHEN UPDATING ADVANCE TIME
+                print("Move accepted")                
+                wf_0 = wf_n
+                self.wf = wf_n
+                accept += 1
+                self.system.position_matrix = r_new
+                r_0 = r_new
+            else:
+                print("Move declined")
+                self.system.position_matrix = r_0
                 
             #update expectation values            
             delta_e = self.local_energy() + self.two_alpha_w

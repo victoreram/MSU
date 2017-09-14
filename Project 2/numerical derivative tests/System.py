@@ -41,14 +41,17 @@ class System:
                 #r_12 += particle_1.distance_difference(particle_2.position)
         return r_12
         
-    def r_sum_squared(self):
-        '''Returns sum of relative distances among all particles squared, aka r_1^2 + r_2^2 + ...'''
+    def r_sum_squared(self,r):
+        '''
+        Returns sum of relative distances among all particles squared, 
+        i.e. r_1^2 + r_2^2 + ...+ r_k^2
+        '''
         r_sum = 0.0
         for i in range(self.number_of_particles):
             #loop over each particle
             r_ij_particle = 0.0
             for j in range(self.dimensions):
-                r_ij_particle += self.position_matrix[i][j]**2
+                r_ij_particle += r[i][j]**2
             r_sum += r_ij_particle
 #        for j in range(self.dimensions):
 #            r_sum += self.position_matrix[i][j]**2
@@ -60,9 +63,11 @@ class System:
 #        for particle in self.particles:
 #            particle.random_move(self.step_length)
         '''Move one particle at a time'''
-        for p in range(len(self.particles)-1):
+        for p in range(len(self.particles)):
             self.particles[p].random_move(self.step_length)
-        self.position_matrix = [particle.position for particle in self.particles]
+        r_new = [particle.position for particle in self.particles]
+        return r_new
+        #self.position_matrix = [particle.position for particle in self.particles]
         #print(self.position_matrix)
 
         
