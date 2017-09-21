@@ -19,11 +19,13 @@ class Particle:
         '''Brute Force move; randomly choose where to move without importance
         sampling'''
         #print(self.position)
+        temp_coordinates = self.position.copy()
         for index in range(len(self.position)):
             old_coordinate = self.position[index]
             new_coordinate = old_coordinate + step_length * (random() - .5)
-            self.position[index] = new_coordinate
-            
+            temp_coordinates[index] = new_coordinate
+            #self.position[index] = new_coordinate
+        return temp_coordinates
         #print(self.position)
     def move(self, step_length=1.0):
         '''Move for importance sampling'''

@@ -11,6 +11,8 @@ from Solver import Solver
 from System import System
 #from Hamiltonians import Hamiltonian as H
 import time
+import sys
+
 
 
 def initialize(infile):
@@ -46,18 +48,22 @@ def initialize(infile):
 
 def get_params():
     '''Takes parameters from input file'''
-    infilename = input("Enter the input file name: ")
+    #infilename = input("Enter the input file name: ")
+    args = sys.argv[1:]
+    infilename= args[0]
+    outfilename= args[1] 
     if infilename == '':
-        infilename = 'in.txt'
+        print("No input file given in 1st argument")
     infile = open(infilename, 'r')
     print("Loading {}...".format(infilename))
     
-    outfilename = input("Enter the output file name: ")
+    #outfilename = input("Enter the output file name: ")
     if outfilename == '':    
-        outfilename = 'out.txt'
+        print("No output file given in 2nd argument")
     outfile = open(outfilename, 'w')
     
     print("Writing on {}...".format(outfilename))
+    print(infilename,outfilename)
     return infile, outfile
     
 infile, outfile = get_params()

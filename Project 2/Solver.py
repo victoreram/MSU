@@ -9,6 +9,7 @@ import numpy as np
 from System import System
 from Particle import Particle
 from random import random
+
 class Solver:
     def __init__(self, system, mc_cycles, alpha, beta, alpha_step,beta_step,alpha_variations,beta_variations):
         '''Solver(mc_cycles, alpha, beta, alpha step, beta step, 
@@ -71,10 +72,16 @@ class Solver:
         print("Minimum energy {} at alpha = {}, beta = {}".format(minimum_energy, minimum_alpha, minimum_beta))
         return minimum_alpha, minimum_beta, minimum_energy                      
 
-    def trial_wavefunction(self):
+    def trial_wavefunction(self, r):
         wf = 1.0
-        r_1_squared_plus_r_2_squared = self.system.r_sum_squared()
-        wf *= math.exp(-0.5*self.alpha*self.system.w*r_1_squared_plus_r_2_squared)
+        r_sum = 0.0
+        for i in range(self.system.number_of_particles):
+            #loop over each particle
+            r_ij_particle = 0.0
+            for j in range(self.system.dimensions):
+                r_ij_particle += r[i][j]**2
+            r_sum += r_ij_particle
+        wf *= math.exp(-0.5*self.alpha*self.system.w*r_sum)
 #        for p in range(self.system.number_of_particles):
 #            r_sum = self.system.relative_distance_squared(p)
 #            wf *= math.exp(-0.5*self.alpha*self.system.w*r_sum)
@@ -95,20 +102,27 @@ class Solver:
         return wf
  
         
-    def local_energy(self, a = 1.0):
+    def local_energy(self, r, a = 1.0):
         '''Local Energy using analytical expression. '''
         w = self.system.w
         alpha = self.alpha
         beta = self.beta
         energy = 0.0
         #energy += self.two_alpha_w
-        r_1_squared_plus_r_2_squared = self.system.r_sum_squared()
+        #r_1_squared_plus_r_2_squared = self.system.r_sum_squared()
+        r_sum = 0.0
+        for i in range(self.system.number_of_particles):
+            #loop over each particle
+            r_ij_particle = 0.0
+            for j in range(self.system.dimensions):
+                r_ij_particle += r[i][j]**2
+            r_sum += r_ij_particle
         #print("Particle coordinates: {}, r_1^2 + r_2^2 = {} ".format( self.system.position_matrix, r_1_squared_plus_r_2_squared))
         #r_12 = math.sqrt(self.system.particle_distance_squared())
         #r_12_inverse = 1/r_12
         #one_plus_beta_r_12 = 1+self.beta*r_12
         #calculation of energy from A.1.18 of Christian's Thesis
-        energy += self.half_omega_squared*r_1_squared_plus_r_2_squared*self.one_minus_alpha_squared
+        energy += self.half_omega_squared*r_sum*self.one_minus_alpha_squared
         #print("delta e = {}*{}*{} = {}".format(self.half_omega_squared,r_1_squared_plus_r_2_squared,self.one_minus_alpha_squared,energy))
         #energy -= 2*a*beta/(one_plus_beta_r_12**3)
         #energy -= a**2/(one_plus_beta_r_12**4)
@@ -120,8 +134,69 @@ class Solver:
         #energy += 1/r_12
         return energy
         
+
+    def MC_calculations(self, energy_min = 1.0E9):
+        n_cycles = self.mc_cycles
+        #r_0 = np.zeros((n_particles,dimensions), np.double)
+        #r_n = np.zeros((n_particles,dimensions), np.double)
+        energy = 0.0
+        energy2 = 0.0
+        accept = 0.0
+        delta_e = 0.0
+        #iters=0
+#        for i in range(n_particles):
+#            for j in range(dimensions):
+#                r_0[i,j] = step_length * (random() - .5)
+        #Initial position
+        #print("Initial position: ", self.system.position_matrix)
+
+        r_0 = self.system.advance_time()
+        wf_0 = self.trial_wavefunction(r_0)
+        #energy += self.two_alpha_w*self.mc_cycles
+        #print("Initial wavefunction = {}".format(wf_0))
+        for cycle in range(self.mc_cycles):
+            #Trial position
+            r_n = self.system.advance_time()
+            #print("Particle coordinates: ", self.system.position_matrix)
+            wf_n = self.trial_wavefunction(r_n)
+            #Metropolis test to see whether we accept the move
+            #get ZeroDivisionError without "if wf_0 == 0.0" <- resolved as of 9/14
+            roll = random()            
+            #print("random: {:.3} new wf: {:.3} old wf: {:.3} ratio: {:.3}".format(roll, wf_n**2, wf_0**2, wf_n**2 / wf_0**2))
+            if roll < wf_n**2 / wf_0**2:
+                wf_0 = wf_n
+                accept += 1
+                self.system.position_matrix = r_n
+                r_0 = r_n
+                #print("Move accepted; moving to ", r_n)
+
+                
+            #update expectation values            
+            delta_e = self.local_energy(r_0) + self.two_alpha_w
+            energy += delta_e
+            energy2 += delta_e**2
+            #print("{} + {} = {}".format(old_energy,delta_e,energy))
+
+            #iters += 1
+        #We calculate mean, variance and error ...
+        energy /= n_cycles
+        energy2 /= n_cycles
+        print("Energy = ", energy)
+        variance = abs(energy2 - energy**2)
+        error = math.sqrt(variance/n_cycles);
+        results = self.alpha, self.beta, energy, variance, error, accept*1.0/n_cycles
+        print("variance: {:e} error: {:e} acceptance ratio: {}".format( variance, error, accept*1.0/n_cycles)) 
+        return results
+            
+    def write_to_file(self,outfile,results):    
+        outfile.write('%f %f %f %f %f %f\n' %(results[0],results[1],results[2],results[3],results[4],results[5]))
+            
     def quantum_force(self):
-        
+        '''
+        Calculate 1st derivative
+        Apply Jastrow Factor Contribution using Jastrow Derivative
+        '''
+        pass
 #        {
 #  // compute the first derivative 
 #  for (int i = 0; i < NumberParticles; i++) {
@@ -140,11 +215,7 @@ class Solver:
 #  }
 #} // end of QuantumForce function
         
-        '''
-        Calculate 1st derivative
-        Apply Jastrow Factor Contribution using Jastrow Derivative
-        '''
-        pass
+
     
     def Jastrow_derivative(self):
         pass
@@ -182,57 +253,6 @@ class Solver:
 #                    
 #                return r_12
         
-    def MC_calculations(self, energy_min = 1.0E9):
-        n_cycles = self.mc_cycles
-        #r_0 = np.zeros((n_particles,dimensions), np.double)
-        #r_n = np.zeros((n_particles,dimensions), np.double)
-        energy = 0.0
-        energy2 = 0.0
-        accept = 0.0
-        delta_e = 0.0
-        #iters=0
-#        for i in range(n_particles):
-#            for j in range(dimensions):
-#                r_0[i,j] = step_length * (random() - .5)
-        #Initial position
-        #print("Initial position: ", self.system.position_matrix)
-
-        self.system.advance_time()
-        wf_0 = self.trial_wavefunction()
-        #energy += self.two_alpha_w*self.mc_cycles
-        #print("Initial wavefunction = {}".format(wf_0))
-        for cycle in range(self.mc_cycles):
-            #Trial position
-            self.system.advance_time()
-            #print("Particle coordinates: ", self.system.position_matrix)
-            #energy += self.two_alpha_w
-            wf_n = self.trial_wavefunction()
-            #Metropolis test to see whether we accept the move
-            #get ZeroDivisionError without "if wf_0 == 0.0"
-            if wf_0 == 0.0 or random() < wf_n**2 / wf_0**2:
-                    wf_0 = wf_n
-                    accept += 1
-                
-            #update expectation values            
-            delta_e = self.local_energy() + self.two_alpha_w
-            energy += delta_e
-            energy2 += delta_e**2
-            #print("{} + {} = {}".format(old_energy,delta_e,energy))
-
-            #iters += 1
-        #We calculate mean, variance and error ...
-        energy /= n_cycles
-        energy2 /= n_cycles
-        print("Energy = ", energy)
-        variance = abs(energy2 - energy**2)
-        error = math.sqrt(variance/n_cycles);
-        results = self.alpha, self.beta, energy, variance, error, accept*1.0/n_cycles
-        return results
-            
-    def write_to_file(self,outfile,results):    
-        outfile.write('%f %f %f %f %f %f\n' %(results[0],results[1],results[2],results[3],results[4],results[5]))
-            
-            
             
 ###############################################################################            
 #    def trial_wavefunction(self, r, system):
