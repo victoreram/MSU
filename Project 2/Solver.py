@@ -41,6 +41,8 @@ class Solver:
     def half_omega_squared(self):
         return 0.5*self.system.w**2
         
+        
+        
     def optimize_parameters(self, outfile, minimum_energy=1E9):
         '''Test varational parameters. Default parameters include alpha
         and beta'''

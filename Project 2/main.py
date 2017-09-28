@@ -12,9 +12,25 @@ from System import System
 #from Hamiltonians import Hamiltonian as H
 import time
 import sys
+import matplotlib.pyplot as plt
 
-
-
+def plot_energy_alpha(infile, plotfilename):
+    with open(infile) as data:
+        alphas = []
+        energies = []
+        for line in data:
+            line = line.split()
+            alpha,energy = line[0], line[2]
+            alphas.append(alpha)
+            energies.append(energy)
+        plt.plot(alphas,energies, 'b-', label='data')
+        #plt.plot(v_array, f(v_array, *popt), 'r--', label='fit')
+        plt.xlabel("Alpha")
+        plt.ylabel("Energy")
+        plt.legend()
+        plt.savefig(plotfilename)
+        
+        
 def initialize(infile):
     '''Read line from file as parameters.
     The format:
@@ -52,6 +68,11 @@ def get_params():
     args = sys.argv[1:]
     infilename= args[0]
     outfilename= args[1] 
+    plotfilename = args[2]
+    if plotfilename == '':
+        plot_bool = False
+    else:
+        plot_bool = True
     if infilename == '':
         print("No input file given in 1st argument")
     infile = open(infilename, 'r')
@@ -61,12 +82,12 @@ def get_params():
     if outfilename == '':    
         print("No output file given in 2nd argument")
     outfile = open(outfilename, 'w')
-    
     print("Writing on {}...".format(outfilename))
     print(infilename,outfilename)
-    return infile, outfile
+    return infile, outfile, outfilename, plot_bool, plotfilename
     
-infile, outfile = get_params()
+
+infile, outfile, outfilename, plot_bool, plotfilename = get_params()
 solver, system, bool_params = initialize(infile)
 #solver, system, hamiltonian = intiialize(infile)
 parameter_string = '''
@@ -87,6 +108,9 @@ t_i = time.time()
 solver.optimize_parameters(outfile)
 infile.close()
 outfile.close()
+
+if plot_bool == True:
+    plot_energy_alpha(outfilename, plotfilename)
 print('\nDone. Results are in the output file, formatted as:\n\
 alpha, beta, <energy>, variance, error, acceptance ratio' )
 
