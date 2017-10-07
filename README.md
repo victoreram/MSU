@@ -14,3 +14,5 @@ Model of the Solar System
 
 Project 4:
 Simulating the distribution of wealth using Monte Carlo
+![alt text](https://github.com/victoreram/PHY480Projects/blob/master/Project4/Pareto_Distribution.png "The Pareto Distribution")
+
