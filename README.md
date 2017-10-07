@@ -9,6 +9,8 @@ Eigenvalue Solver
 
 Project 3:
 Model of the Solar System
+![alt text](https://github.com/victoreram/PHY480Projects/blob/master/Project3/solar_system_no_interactions.png "The Solar System")
+
 
 Project 4:
 Simulating the distribution of wealth using Monte Carlo
