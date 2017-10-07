@@ -1,0 +1,1 @@
+Our physical world will be represented by a graph at a high level, such that locations that a person can be in at any given time (such as home, work, stores) are nodes of the graph. Public transportation methods are also nodes on the graph, e.g. between some two locations A and B there might be a node C that represents being on the bus from A to B. 
