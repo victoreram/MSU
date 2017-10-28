@@ -1,0 +1,74 @@
+---
+title: "Homework 3"
+author: "Victor Ramirez, Phil Sattler, Gaeun Lee"
+date: "October 25, 2017"
+output: html_document
+---
+
+```{r echo=FALSE, global_options}
+knitr::opts_chunk$set(comment = NA,tidy = TRUE)
+```
+### Question 1
+
+#### Part a
+```{r}
+
+```
+
+#### Part b
+```{r}
+
+```
+
+#### Part c
+```{r}
+
+```
+
+#### Part d
+```{r}
+
+```
+
+#### Part e
+```{r}
+
+```
+
+#### Part f
+```{r}
+
+```
+
+#### Part g
+```{r}
+
+```
+
+#### Part h
+```{r}
+
+```
+
+### Question 2
+#### Part a
+```{r}
+
+```
+#### Part b
+```{r}
+
+```
+#### Part c
+```{r}
+
+```
+#### Part d
+```{r}
+
+```
+### Problem 3
+```{r}
+
+```
+

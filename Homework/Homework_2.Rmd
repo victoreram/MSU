@@ -1,0 +1,367 @@
+---
+title: "STT 301 Homework Assignment 2"
+author: "Victor Ramirez"
+date: "September 27, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+####Required Data: `nypd_2016.csv`, `variables_nypd_2016`
+
+####Required Packages: `rgdal`, `RColorBrewer`, `classInt`
+
+```{r echo=FALSE, global_options}
+knitr::opts_chunk$set(comment = NA,tidy = TRUE)
+```
+
+
+
+```{r cache=TRUE}
+nypd <- read.csv(file="nypd_2016.csv", header = TRUE, stringsAsFactors = FALSE)
+```
+
+### Question 1 (3 points)
+#### Data cleaning and exploration
+
+#### Part a (0.25 points)
+
+```{r}
+#subset(nypd)
+#Extract the following: 'pct', 'crimsusp', 'arstmade', 'sex', 'race', 'age', 'ht_feet', 'ht_inch', 'weight', 'build', 'xcoord', 'ycoord'.
+# nypd.filter <- data.frame(pct = nypd$pct, crimsusp = nypd$crimsusp, 
+#                             arstmade = nypd$arstmade, sex = nypd$sex,
+#                             race = nypd$race, age = nypd$age, 
+#                             ht_feet = nypd$ht_feet, ht_inch = nypd$ht_inch,
+#                             weight = nypd$weight, build = nypd$build,
+#                           xcoord = nypd$xcoord, ycoord = nypd$ycoord)
+nypd.filter <- subset(nypd, select=c("pct", "crimsusp", "arstmade", "sex", "race", "age", "ht_feet", "ht_inch", "weight", "build", "xcoord", "ycoord"))
+str(nypd.filter)
+```
+
+
+#### Part b (0.5 points)
+
+
+```{r}
+nypd.filter$age <- as.numeric(nypd.filter$age) #change type of agefrom factor to double
+str(nypd.filter)
+```
+
+
+#### Part c (0.5 points)
+
+```{r}
+nypd.filter <- na.omit(nypd.filter) #Get rid of NA's
+#Another solution based on StackOverflow
+# https://stackoverflow.com/questions/4862178/remove-rows-with-nas-missing-values-in-data-frame
+#row.has.na <- apply(nypd.filter, 1, function(x){any(is.na(x))})
+#nypd.filter <-  nypd.filter[!row.has.na,]
+dim(nypd.filter) 
+tail(nypd.filter,6) #Display last 6 rows of nypd.filter
+```
+
+
+#### Part d (0.25 points)
+
+
+```{r}
+# Create a table for arstmade, sex, and race from nypd.filter
+arstmade.table = table(nypd.filter$arstmade)
+sex.table = table(nypd.filter$sex)
+race.table = table(nypd.filter$race)
+arstmade.table
+sex.table
+race.table
+```
+
+
+#### Part e (0.5 points)
+
+```{r}
+# Ensure vectors contain factors to make bar plot
+#Race
+race <- as.factor(nypd.filter$race)
+plot(race)
+```
+Race B makes up a disproportionate amount of crimes. 
+Q is next highest, but at less than half of B.
+Races I, U, and Z barely committed any.
+```{r}
+#Sex
+sex <- as.factor(nypd.filter$sex)
+plot(sex)
+```
+Males make up a disproportionate amount of crimes and it's not even close.
+```{r}
+#pct
+pct <- as.factor(nypd.filter$pct)
+plot(pct)
+```
+One precinct gets a ton of crime; double the amount of the next highest.
+Most other precincts tend to be "low-crime"
+
+
+#### Part f (0.5 points)
+
+
+```{r}
+sex.race.table = table(nypd.filter$sex,nypd.filter$race)
+sex.race.table
+```
+- Race B were most frequently SQF across their respective sexes. 
+- B M were the most frequently SQF group. 
+- B F were more disproportionately SQF then their B M counterparts compared to their respective races. 
+
+```{r}
+arstmade.race.table = table(nypd.filter$arstmade,nypd.filter$race)
+arstmade.race.table
+```
+
+- Arrests are less likely to be made than not made across the board.
+- Race B are disproportionately more likely to be arrested than their peer groups. 
+- If you are SQF, you are 3 times more likely to not be arrested than not arrested,
+
+#### Part g (0.5 points)
+
+
+```{r}
+#mean of SQF individuals
+age.mean = mean(nypd.filter$age)
+age.mean
+
+#median of SQF individuals
+age.median = median(nypd.filter$age)
+age.median
+
+#standard deviation of age of SQF individuals
+age.sd = sd(nypd.filter$age)
+age.sd
+```
+
+```{r}
+#Histogram of age
+age.vector = as.numeric(nypd$age)
+hist(age.vector,xlab = "Age", ylab = "Individuals SQF", main = "Frequency of SQF by age")
+```
+- The number of SQF's spikes as individuals hit adulthood.
+- There appears to be an exponential decay of SQF's startinf from age~19.
+- There is a nonzero amount of SQF's with age 0-5, but that may just be noise from data.
+
+
+
+### Question 2 (3 points)
+#### Data subsetting
+
+#### Part a (1 point)
+
+Our race and sex tables already give the total counts of arrest instances. Since these quantities are vectorized, we can just divide the tables by the total length of the dataset and multiply by 100 and R will do most of the work for us.
+Use the `nypd.filter` data frame to answer the following questions.
+
+```{r}
+#Percentages of race given that arrest was made
+nypd.filter$arstmade <- as.factor(nypd.filter$arstmade)
+arstmadeY.race <- nypd.filter$race[nypd.filter$arstmade=="Y"]
+arstmadeY.race.table = table(arstmadeY.race, dnn = "Arrest% by race")
+100*arstmadeY.race.table/length(arstmadeY.race)
+```
+
+```{r}
+#Percentages of sex given an arrest was made
+arstmadeY.sex <- nypd.filter$sex[nypd.filter$arstmade=="Y"]
+arstmadeY.sex.table = table(arstmadeY.sex, dnn="Arrest% by sex")
+100*arstmadeY.sex.table/length(sex)
+
+```
+
+
+
+#### Part b (1 point)
+
+
+```{r}
+age <- as.numeric(nypd.filter$age)
+#Extract individual SQF for 18 or older
+mean.age.18plus = mean(age[age>=18])
+mean.age.18plus
+```
+```{r}
+#Extract ages of each gender from nypd.filter into vector, then calculate mean
+age.males <- as.numeric(nypd.filter$age[sex=='M'])
+age.females <- as.numeric(nypd.filter$age[sex=='F'])
+mean(age.males)
+mean(age.females) 
+```
+
+```{r}
+#Extract weights of each individual SQF for each gender
+weight.males <- as.numeric(nypd.filter$weight[sex=='M'])
+weight.females <- as.numeric(nypd.filter$weight[sex=='F'])
+mean(weight.males)
+mean(weight.females)
+```
+
+```{r}
+#Extract ages of individual SQFs from pct 106
+age.pct106 <- as.numeric(nypd.filter$age[pct=106])
+mean(age.pct106)
+```
+```{r}
+#Extract weight of individual SQFs from 106 or 49
+weight.pct106.pct49 <- as.numeric(nypd.filter$weight[pct==106 | pct==49])
+mean(weight.pct106.pct49)
+```
+
+
+#### Part c (1 point)
+
+
+```{r}
+# > Number of crimes where the suspected crime was murder
+dwi <- nypd.filter$crimsusp[which(nypd.filter$crimsusp=="DWI" | nypd.filter$crimsusp=="D.W.I.")]
+length(dwi)
+
+```
+2 seems extremely low. The reason that this filter only gives 2 is because DWI's are generally paired with other crimes, so searching just "DWI" or "D.W.I." will give few results.
+
+```{r}
+#Number of crimes where the suspected crime was murder
+nypd.filter$crimsusp <- as.factor(nypd.filter$crimsusp)
+murders <- nypd.filter$crimsusp[which(nypd.filter$crimsusp=="MURDER")]
+length(murders)
+
+```
+
+6 seems extremely low
+The excel file disagrees with this. After examining this further, the assignment asks specifically for just "MURDER" but there are many variations of murders listed in the nypd file that aren't being counted by this search.
+
+
+
+```{r}
+arrests.suspectedmurder <- nypd.filter$arstmade[which(nypd.filter$crimsusp=="MURDER")]
+length(arrests.suspectedmurder)
+```
+We get 6, and the number is low for the same reasons above.
+### Question 3 (3 points)
+#### Writing a function
+
+
+#### Part a (1.5 points)
+
+
+```{r}
+height_to_inches <- function(feet, inches){
+  #stopifnot(sum(feet<0)==0)
+  #ensure no value is negative
+  if(feet > 0 & inches > 0){
+    return(feet*12 + inches)
+  }
+  #ensure no NA values exist
+  if(is.na(feet) | is.na(inches) ){
+    return(0)
+  }
+  #ensure that there's no way of returning NA
+  #If it passes the above two checks then something unusual must be going on, and the function has to return a 0.
+  
+  return(0)
+  
+}
+```
+
+#### Part b (0.5 points)
+
+```{r}
+nypd.filter$ht_inch_total <- height_to_inches(nypd.filter$ht_feet, nypd.filter$ht_inch)
+
+#check to see if data frame is now at 13 columns
+str(nypd.filter)
+```
+
+#### Part c (0.5 points)
+
+
+```{r}
+#Setting na.rm==TRUE gave me issues, so instead I'll force NA values to 0.
+nypd.filter$weight[is.na(nypd.filter$weight)] <- 0
+nypd.filter$ht_inch_total[is.na(nypd.filter$ht_inch_total)] <- 0
+cor(nypd.filter$ht_inch_total, nypd.filter$weight)
+```
+
+#### Part d (0.5 points)
+
+
+```{r}
+plot(nypd.filter$weight,nypd.filter$ht_inch_total)
+```
+There is a large cluster of data in the weight between 150-250 and heights between 60 and 80 inches.
+
+The 0 weight and height are a result of forcing NA values to be 0.
+
+There's also extra data points far out in the weight = 0 region. Either there's some really heavy folk clocking in at 1000 (implausible) or there's a flaw in how data is taken (much more likely).
+
+### Question 4 (1 point)
+
+#### Part a (0.5 points)
+
+
+```{r}
+pct.table <- table(nypd.filter$pct)
+pct.df <- data.frame(pct.table)
+```
+
+#### Part b (0.25 points)
+
+```{r tidy=FALSE}
+nyc.precinct.plot <- function(df){ # load required packages
+    library(rgdal)
+    library(RColorBrewer)
+    library(classInt)
+      
+    # download precinct map
+    download.file("http://www.rob-barry.com/assets/data/mapping/nypp_15b.zip",destfile = "nypp_15b.zip")
+    unzip(zipfile = "nypp_15b.zip")
+    nypp <- readOGR("nypp_15b", "nypp")
+    
+{colnames(df) <- c("pct", "stops")}
+    
+    # create a sub function for merging data frames
+    merge.shpdf.df = function(shpdf, sub.df, by.shpdf, by.df) {
+    	shpdf@data <-
+    		data.frame(shpdf@data, sub.df[match(shpdf@data[, by.shpdf], sub.df[, by.df]), ])
+    	return(shpdf)
+    }
+    
+    # merge data frames using sub function
+    nypp.merge <- merge.shpdf.df(nypp, df, "Precinct", "pct")
+    
+    # create the plot
+    pal = brewer.pal(5, "YlOrRd")
+    fill.clr <- findColours(classIntervals(nypp.merge@data$stops, style = "pretty", n = 5), pal)
+    plot(nypp, col = fill.clr, main="Stop-Question-Frisk Incidents by Precinct")
+    legend(
+      "topleft",
+      fill=attr(fill.clr, "palette"),
+      legend=names(attr(fill.clr, "table")),
+      bty = "n"
+    )}
+```
+
+Problems with this coding style: 
+
+1. There is no consistency with where the brackets are placed.
+2. The variable names are not descriptive.
+3. The "sub-function" could easily have been put outside of the function. Inside the function, it just takes up space.
+4. The function is doing way too much. Generally functions should focus on doing one thing. A better way to execute the tasks it does is to break it up.
+
+#### Part c (0.25 points)
+
+
+```{r}
+nyc.precinct.plot(pct.df)
+```
+Observations:
+
+- One precinct has an incredibly high SQF frequency compared to the others. 
+- Most precincts have SQF requencies in the 0-400 range.
+- Precincts with similar SQF frequencies tend to group together. Low SQF precincts neighbor other low SQF precincts.
+The plot can be improved by having the precincts labeled and have neighborhoods overlayed. This would give the plot context that a non-NYC native doesn't have.
