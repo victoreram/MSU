@@ -8,27 +8,55 @@ output: html_document
 ```{r echo=FALSE, global_options}
 knitr::opts_chunk$set(comment = NA,tidy = TRUE)
 ```
+```{r}
+library(tidyverse)
+library(stringr)
+```
+
 ### Question 1
 
 #### Part a
 ```{r}
-
+tb.cases <- as.tibble(read.csv('tb_cases.csv'))
+tb.cases
 ```
 
 #### Part b
 ```{r}
-
+tb.cases1 <- gather(data=tb.cases, key=diag, value = cases, 5:60, na.rm=TRUE)
+tb.cases1
 ```
 
 #### Part c
 ```{r}
+#old diag column
+table(tb.cases1$diag)
 
+```
+```{r}
+#mutate diag column by replacing "newrel" values to "new_rel"
+tb.cases2 <- mutate(tb.cases1, diag = str_replace(diag, "newrel", "new_rel"))
+table(tb.cases2$diag)
 ```
 
 #### Part d
 ```{r}
+###WRONG: NEED TO SET new = first element of each list from str_split, type = second element, and sex.age = 3rd element
 
+tb.cases2 <- mutate(tb.cases2, new,type,sex.age = str_split(diag,"_"))
+tb.cases2
+#tb.cases2
 ```
+
+```{r}
+a = c("abc_123", "def_456", "ghi_789")
+b<-list(str_split(a,"_"))
+b[1]
+#str_split(a, "_")
+#str_split(tb.cases2$diag, "_")
+#sapply(tb.cases2$diag,str_split(tb.cases2$diag,"_"))
+```
+
 
 #### Part e
 ```{r}
