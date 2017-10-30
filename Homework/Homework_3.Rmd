@@ -54,6 +54,9 @@ tb.cases3 <- tb.cases3[1:8]
 tb.cases3
 ```
 
+```{r}
+unique(tb.cases3$sex.age)
+```
 
 #### Part e
 ```{r}
@@ -63,17 +66,19 @@ tb.cases4
 
 #### Part f
 ```{r}
+tb.cases5 <- separate(data=tb.cases4, col=sex.age, into=c("sex", "age"),sep = 1, remove = TRUE)
 
 ```
 
 #### Part g
 ```{r}
-
+tb.cases6 <- tb.cases5[c(1,2,5,4,3,6)]
+tb.cases6
 ```
 
 #### Part h
 ```{r}
-
+tb.cases6 %>% mutate_if(is.character, as.factor)
 ```
 
 ### Question 2
