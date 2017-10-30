@@ -41,26 +41,24 @@ table(tb.cases2$diag)
 
 #### Part d
 ```{r}
-###WRONG: NEED TO SET new = first element of each list from str_split, type = second element, and sex.age = 3rd element
-
-tb.cases2 <- mutate(tb.cases2, new,type,sex.age = str_split(diag,"_"))
-tb.cases2
-#tb.cases2
-```
-
-```{r}
-a = c("abc_123", "def_456", "ghi_789")
-b<-list(str_split(a,"_"))
-b[1]
-#str_split(a, "_")
-#str_split(tb.cases2$diag, "_")
-#sapply(tb.cases2$diag,str_split(tb.cases2$diag,"_"))
+Split <- strsplit(as.character(tb.cases2$diag), "_", fixed = TRUE)
+new <- sapply(Split, "[", 1)
+type <- sapply(Split, "[", 2)
+sex.age <- sapply(Split, "[", 3)
+tb.cases3 <- tb.cases2
+tb.cases3$new <- new
+tb.cases3$type <- type
+tb.cases3$sex.age <- sex.age
+tb.cases3 <- tb.cases3[c(1:4,7:9,6,5)]
+tb.cases3 <- tb.cases3[1:8]
+tb.cases3
 ```
 
 
 #### Part e
 ```{r}
-
+tb.cases4 <- tb.cases3[c(1,4,6:8)]
+tb.cases4
 ```
 
 #### Part f
