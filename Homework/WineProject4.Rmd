@@ -1,0 +1,187 @@
+---
+title: "Wine Project"
+author: "Adam Rosa, Travis Conte, Spencer Crough, LizzzzZZZZzzzy 'aka Travis' best friend' Burr, Victor Ramirez, Rob Gerth"
+date: "November 18, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library(ggplot2)
+library(caret)
+library(class)
+library(tidyverse)
+```
+
+```{r}
+wine_data <- read.csv(file = "wine_data.csv")
+wine_data <- data.frame(wine_data)
+colnames(wine_data) <- c("number","alcohol","malic","ash","alcalinity","magnesium","phenols","flavanoids","nonflavanoid","proanyhocyanins","color","hue","OD280/OD315","proline")
+wine_data
+
+```
+### 1. Exploratory Data Analysis
+```{r}
+#creates overall summary stats for the data containing all 3 types
+summary(wine_data)
+
+# creates subset for each classification to get data sets
+wine_data_1 = subset(wine_data, number==1)
+wine_data_2 = subset(wine_data, number==2)
+wine_data_3 = subset(wine_data, number==3)
+
+# creates summary stats for each of the 3 classifications
+summary(wine_data_1)
+summary(wine_data_2)
+summary(wine_data_3)
+```
+### 2. Plotting Flavanoids and Color Intensity
+```{r}
+#Plot Flavanoids vs. Color intensity
+ggplot(data=wine_data, aes(x=wine_data$flavanoids,y=wine_data$color))+geom_point(aes(color=factor(number)))+labs(x= "Flavanoids",y="Color",color="Origin Classification", title="Wine Region Classification: Flavanoids vs. Color")
+```
+### 3 Applying knn on Flavanoids and Color
+It appears that knn will likely be pretty successful.  On these two traits alone, there is some fuzzy space between 1 and 2 that would get slurred a bit, but for the most part, the 3 colors are reasonably separated.
+
+
+```{r}
+set.seed(123)
+
+#Normalize
+wine_data[,2:14] <- scale(wine_data[,2:14])
+
+# create training and testing data sets
+train.index <- createDataPartition(wine_data[,1], 1, p = 0.70)
+wine_data.train <- wine_data[train.index$Resample1, ]
+wine_data.test <- wine_data[-train.index$Resample1, ]
+```
+
+```{r}
+# check diagnosis proportions are the same for training and testing; and also are comparable to the entire data set
+wine_data %>% group_by(number) %>% summarize(count = n(), proportion = n()/dim(wine_data)[1])
+
+wine_data.train %>% group_by(number) %>% 
+  summarize(count = n(), proportion = n()/dim(wine_data.train)[1])
+
+wine_data.test %>% group_by(number) %>% 
+  summarize(count = n(), proportion = n()/dim(wine_data.test)[1])
+```
+
+```{r}
+#Shawn's code from HW 5 solutions
+knn.med <- function(train.mat, test.mat, cl.train.vec, k.vec){
+  
+  # train.mat - training data matrix that contains classes in column 1 and features in rest
+  # test.mat - testing data matrix that contains classes in column 1 and features in rest
+  # cl.train.vec - vector of classifications for training data
+  # k.vec - vector of k values for knn
+  
+  result.mat <- matrix(0, nrow = length(k.vec), ncol = 4)
+  
+  for (i in 1:length(k.vec)){
+    
+    knn.result <- knn(train = train.mat[-1], test = test.mat[-1],
+                      cl = cl.train.vec, k = k.vec[i])
+    
+    conf.mat <- table(knn.result, test.mat[,1])
+    
+    result.mat[i,] <- c(k.vec[i], (sum(diag(conf.mat)) / sum(conf.mat)), 
+                        (conf.mat[2,1] / sum(conf.mat)), (conf.mat[1,2] / sum(conf.mat)))
+  }
+  result.df <- data.frame(result.mat)
+  names(result.df) <- c("k", "prop.correct", "fp", "fn")
+  return(result.df)
+  
+}
+#Apply knn on just 2 features
+#features: column 1 = classification, 8 = flavanoids, 11 = colors
+features <- c(1,8,11)
+set.seed(123)
+
+result <- knn.med(train.mat = wine_data.train[features], test.mat = wine_data.test[features], cl.train.vec = wine_data.train[,1],
+        k.vec = seq(1, 39, by = 2))
+result
+
+#Find k values with maximum correct
+result[which.max(result$prop.correct),]
+k.max.correct <- which.max(result$prop.correct)
+
+#Find k value with minimal false negative rates
+result[which.min(result$fn),]
+k.min.fn <- which.min(result$fn)
+```
+
+
+```{r fig.width=9, fig.width=6}
+#plot k vs. accuracy metrics for 2 features.
+result.long <- result %>% gather(key = "measure", value = "value", 2:4)
+
+ggplot(data = result.long, mapping = aes(x = k, y = value, color = measure)) + 
+  geom_line(size = 1.25) + labs(x = "k", y = "accuracy", color="") + 
+  scale_color_manual(labels = c("false negative", "false positive", "correct"), values = c("red","blue","darkgreen")) + theme(legend.position="bottom")
+ggsave("accuracy_2features.png")
+```
+
+Based on the plot above, the best k value for just 2 features is k = 1
+
+
+```{r}
+#Examine confusion matrix for 2 features
+set.seed(123)
+features <- c(8,11)
+k = k.max.correct
+
+knn.result.2features <- knn(train = wine_data.train[features], 
+                    test = wine_data.test[features],
+                      cl = wine_data.train[,1], k = k)
+    
+conf.mat <- table(knn.result.2features, wine_data.test[,1])
+conf.mat.row.names <- c("wine 1", "wine 2", "wine 3")
+conf.mat
+```
+
+
+
+
+
+### 4. Applying knn on all features
+```{r}
+#Apply the k-nn algorithm to classify the wine origin using all attributes for different k values
+features <- c(1:14) # all features
+set.seed(123)
+
+result <- knn.med(train.mat = wine_data.train[features], test.mat = wine_data.test[features], cl.train.vec = wine_data.train[,1],
+        k.vec = seq(1, 39, by = 2))
+result
+
+result[which.max(result$prop.correct),]
+result[which.min(result$fn),]
+```
+
+
+```{r fig.width=9, fig.width=6}
+result.long <- result %>% gather(key = "measure", value = "value", 2:4)
+
+ggplot(data = result.long, mapping = aes(x = k, y = value, color = measure)) + geom_line(size = 1.25) + labs(x = "k", y = "accuracy", color="") + 
+   scale_color_manual(labels = c("false negative", "false positive", "correct"), values = c("red","blue","darkgreen")) + theme(legend.position="bottom")
+ggsave("accuracy_allfeatures.png")
+```
+k = 7 appears to have the highest accuracy and minimizes false negative rates.
+```{r}
+set.seed(123)
+features <- c(1:13)
+k = 7
+
+knn.result.allfeatures <- knn(train = wine_data.train[features], 
+                    test = wine_data.test[features],
+                      cl = wine_data.train[,1], k = k)
+    
+conf.mat <- table(knn.result.allfeatures, wine_data.test[,1])
+conf.mat.row.names <- c("wine 1", "wine 2", "wine 3")
+conf.mat
+```
+
+
+### 5
+Using all features gave a ~4% advantage over using just 2 features. It's not a big tradeoff but given that we only changed 1 parameter and it performed noticeably better, it was worth adding more complex data. To optimize computational performance vs. precision, it would be helpful to select features based on contextual knowledge or testing different combinations of features to see which ones provide the most significant impact.

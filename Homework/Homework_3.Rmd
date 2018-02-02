@@ -18,13 +18,13 @@ library(stringr)
 #### Part a
 ```{r}
 tb.cases <- as.tibble(read.csv('tb_cases.csv'))
-tb.cases
+head(tb.cases,10)
 ```
 
 #### Part b
 ```{r}
 tb.cases1 <- gather(data=tb.cases, key=diag, value = cases, 5:60, na.rm=TRUE)
-tb.cases1
+head(tb.cases1,10)
 ```
 
 #### Part c
@@ -51,7 +51,7 @@ tb.cases3$type <- type
 tb.cases3$sex.age <- sex.age
 tb.cases3 <- tb.cases3[c(1:4,7:9,6,5)]
 tb.cases3 <- tb.cases3[1:8]
-tb.cases3
+head(tb.cases3,10)
 ```
 
 ```{r}
@@ -61,19 +61,19 @@ unique(tb.cases3$sex.age)
 #### Part e
 ```{r}
 tb.cases4 <- tb.cases3[c(1,4,6:8)]
-tb.cases4
+head(tb.cases4,10)
 ```
 
 #### Part f
 ```{r}
 tb.cases5 <- separate(data=tb.cases4, col=sex.age, into=c("sex", "age"),sep = 1, remove = TRUE)
-
+head(tb.cases5,10)
 ```
 
 #### Part g
 ```{r}
 tb.cases6 <- tb.cases5[c(1,2,5,4,3,6)]
-tb.cases6
+head(tb.cases6,10)
 ```
 
 #### Part h
@@ -84,22 +84,52 @@ tb.cases6 %>% mutate_if(is.character, as.factor)
 ### Question 2
 #### Part a
 ```{r}
-
+tb.cases6%>%
+  group_by(age,sex)%>%
+  count(age,wt= cases)
 ```
 #### Part b
 ```{r}
-
+# tb.cases6%>%
+#   group_by(country)%>% 
+#   count(country,wt=cases)
+tb.cases6 %>% 
+  filter(rank(desc(cases)) == 1)
+  
 ```
 #### Part c
 ```{r}
-
+tb.cases6%>%
+  filter(year>2009)%>%
+  group_by(year,type)%>%
+count(year,wt = cases)
 ```
 #### Part d
 ```{r}
-
+  tb.cases6%>%
+  filter(country=="India")%>%
+  select(year,age,sex,type,cases)%>%
+  group_by(year)%>%
+filter(rank(cases)==1)
 ```
 ### Problem 3
 ```{r}
+ggplot(data=tb.cases6,aes(x=year, y=cases))+ 
+labs(x = "year", y = "cases",
+     title="Why TB cases are increasing",
+     sutitle="data from tb.cases6"
+     )+
+geom_point()
+```
+```{r}
+#group_by(tb.cases6, sex, cases) 
+filter(tb.cases6, year == 1995) %>% group_by(sex, cases) %>% summarize(mean_cases = mean(cases, na.rm = TRUE)) %>% ggplot(data = ., aes(x = sex, y = mean_cases)) + geom_boxplot(color = "darkgreen", fill = "lightblue") + coord_flip() + labs(x = "Sex", y = "Cases", title = "Cases by Sex in 1995")
+```
 
+```{r}
+filter(tb.cases6, year == 1995) %>% 
+  group_by(age, cases) %>% 
+  summarize(mean_cases = mean(cases, na.rm = TRUE)) %>% 
+  ggplot(data = ., aes(x = age)) + geom_bar(color="black",fill="darkred")+ labs(x = "Age", y = "Mean Cases", title = "Mean Cases by Age in 1995")
 ```
 
