@@ -1,0 +1,385 @@
+---
+title: "STT 301 Homework Assignment 1"
+author: "Victor Ramirez"
+date: "September 15, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+***********************
+
+####Homework Assignment 1 is due Monday, September 18 at 11:00pm EST.
+
+***********************
+
+####Instructions and Rubric
+
+You must complete this individual homework assignment using R Markdown. You may modify this file. Turn in both the "raw" R Markdown file, which should have a `.Rmd` extension, and the resulting HTML output file, which should have an `.html` extension. These files should be uploaded via the dropbox in D2L.
+
+Some of the questions are open-ended, and there is not a correct or incorrect answer. I am interested in you providing good commentary/explanations of what you are doing in the R Markdown file. Remember, part of data science is communicating your results.
+
+- Total: 10 points
+- Correctness: Point values for the question and their respective part(s) are listed. Deductions will be made at the discretion of the grader.
+- Knitting: -0.5 points if the Rmd file does not knit
+- Style: Use a third-level header to off-set each question in your solutions - as is done below. For questions with multiple parts, use fourth level headers to off-set the parts in your solutions - as is done below. Coding style is very important. You will receive a deduction of up to 1.0 point if you do not adhere to good coding style.
+    - No deduction if
+        - appropriate variable use and naming
+        - appropriate function use
+        - good code commenting
+        - consistent style
+    - -0.5 points if two of the above are not      satisfied
+    - -1.0 point if three or more of the above are not satisfied
+    
+***********************
+
+### Question 1 (3 points)
+This question focuses on some basic manipulations of vectors in R.
+
+#### Part a (1 point)
+**No commentary or explanations are necessary.**
+
+Create three vectors in R: One called `nums` which contains the integers from 1 through 7. One called `charnums` which contains character representations of the numbers 1 through 4, namely, "1", "2", "3", "4". And one called `mixed` which contains the same values as in `charnums`, but which also contains the letters "a" and "b".
+```{r}
+rm(list=ls())
+nums <- (1:7)
+charnums <- as.character(1:4)
+mixed <- c(charnums, "a", "b")
+```
+
+#### Part b (1 point)
+
+Investigate what happens when you try to convert `nums` to character and to logical. Investigate what happens when you convert `charnums` to numeric. Investigate what happens when you convert `mixed` to numeric. Comment on each of these conversions.
+
+```{r}
+nums_character <- as.character(nums)  
+typeof(nums_character) #Each element's type changed from int to character
+charnums_numeric <- as.numeric(charnums) 
+typeof(charnums_numeric) #Each element's type changed from character to numeric
+mixed_numeric <- as.numeric(mixed) #Get an error; each element in mixed_numeric has NAs
+```
+When casting the elements of nums into characters, the elements' type changed
+from numerical values into to character.
+When casting the elements of charnums into numerical values, the elements' type
+changed from characters to numeric.
+Casting a vector with mixed types gives the error "NAs introducted by coercion"
+
+#### Part c (1 point)
+**No commentary or explanations are necessary.**
+
+Show how to extract the first element of `nums.`
+```{r}
+nums[1]
+```
+
+
+Show how to extract the last element of `nums.` In this case you are NOT allowed to use the fact that `nums` has seven elements. You should give code which would work no matter how many elements `nums` has.
+```{r}
+nums[length(nums)]
+```
+
+
+Show how to extract all but the first element of `nums.`
+```{r}
+nums[-1]
+```
+
+
+Show how to extract all but the first two and last two elements of `nums.`
+```{r}
+nums[3:(length(nums)-2)]
+```
+
+
+### Question 2 (4 points)
+
+This question will use the `baseball.Rdata` data set that we investigated on the second day of class. Recall that to read this into R you use the following code. You probably want to set `cache = TRUE` in the code chunk options to speed up the processing of the R Markdown file.
+
+```{r, cache = TRUE, comment = NA}
+load("baseball.Rdata")
+ls()
+```
+
+#### Part a (1 point)
+**No commentary or explanations are necessary.**
+
+Create a data frame that only contains data for one team during one year. For example, you could choose the 1927 New York Yankees, one of the best teams in baseball history; or the 1971 Cleveland Indians, which was not a very good team. Since we haven't studied how to do this formally yet, here is an example which shows how to select the 1971 Cleveland Indians.
+
+```{r, comment = NA}
+cleveland1971 <- subset(batting_stats, teamID == "CLE" & yearID == 1971)
+dim(cleveland1971) # dimensions rows x columns
+```
+
+
+
+If you want a list of the team IDs, use `levels(batting_stats$teamID)`. If you want a list of the available years, use `sort(unique(batting_stats$yearID))`. Save the dataframe with a meaningful name.
+
+```{r}
+tigers2003 <- subset(batting_stats, teamID == "DET" & yearID == 2003)
+```
+
+
+#### Part b (1 point)
+**No commentary or explanations are necessary.**
+
+Choose three numeric variables to look at from this data frame. In addition, you will want to keep the `playerName` variable so you will know who the values refer to. Variables included in the data frame are listed at the bottom of this document. Note that you can extract individual variables as vectors using the "dollar sign" notation. For example, to extract `BA` you could use
+
+```{r, comment = NA}
+cleveland1971BA = cleveland1971$BA
+cleveland1971BA
+```
+```{r}
+tigers2003playernames <- tigers2003$playerName
+tigers2003pa <- tigers2003$PA
+tigers2003so <- tigers2003$SO
+tigers2003bb <- tigers2003$BB
+```
+
+
+In this case you can see that there is a missing value, specified by `NA`. If desired you can remove such players from your data set altogether, or you can use R's facilities for handling missing data to handle these cases when you compute things like means, maxima, etc. (You'll want to look at help pages if you do this.) If you decide to remove players with missing data, remove them from the data frame before extracting individual variables. Doing this will ensure all of your variables will contain the same number of observations. For example, in the case above, it is the second player who has a missing batting average, so I can go back and remove him from the data frame before extracting the variables of interest.
+
+```{r, comment = NA}
+cleveland1971 <- cleveland1971[-2,]
+dim(cleveland1971)
+```
+
+#### Part c (1 point)
+**No commentary or explanations are necessary.**
+
+For your three variables, determine the maximum value (for example, the maximum batting average for the team) and the player who achieved this maximum. Also determine the mean of each of the three variables.
+```{r}
+#'na.rm = TRUE' ignores NA values
+#which.max gives index in tigers2003playernames, indexing that vector outputs the player's name
+#Plate Appearances
+max(tigers2003pa, na.rm = TRUE) 
+tigers2003playernames[which.max(tigers2003bb)] 
+mean(tigers2003pa, na.rm = TRUE)
+#Strikeouts
+max(tigers2003so, na.rm = TRUE)
+tigers2003playernames[which.max(tigers2003so)]
+mean(tigers2003so, na.rm = TRUE)
+#Walks
+max(tigers2003bb, na.rm = TRUE)
+tigers2003playernames[which.max(tigers2003bb)]
+mean(tigers2003bb, na.rm = TRUE)
+```
+
+
+#### Part d (1 point)
+For two of the variables, compute the correlation and draw a scatter plot. Comment on the plot and correlation. 
+```{r}
+cor(tigers2003so, tigers2003bb, use = "complete.obs") #use = "complete.obs ignores NA"
+
+```
+The correlation between strikeouts and walks are surprisingly high. This shouldn't make sense because strikeouts and walks are two different outcomes of the same event. However this is misleading because this is taking total walks and strikeouts into account. If a player has a lot of strikeouts, then it's likely that the player also has a lot of at bats, which also can lead to more opportunities for that player to take a walk as well. A more useful comparison would be to compare SO% and BB%. 
+
+
+```{r}
+plot(tigers2003so,tigers2003bb)
+```
+
+Again, this confirms the correlation observed in the part above. A player with more total strikeouts will likely have more at bats which give the player more opportunities to also take a walk. 
+
+### Question 3 (3 points)
+This question will use the `baseball.Rdata` data set that we investigated on the second day of class. Complete Question 2 prior to this question.
+
+Select a year. For your chosen year, determine the team with the highest winning percentage and the team with the lowest winning percentage. This can be done through an online search or specifically at Wikipedia. For example, the 1971 results are at https://en.wikipedia.org/wiki/1971_Major_League_Baseball_season. For the year 1971, the Cleveland Indians had a winning percentage of 0.370 and the Baltimore Orioles had a winning percentage of 0.639.
+
+Extract data frames for each of the two teams (highest winning percentage team and lowest winning percentage team) and then use at least three of the variables in each data frame to make comparisons. Explain what you are doing at each step of your analysis. For example, explain why you chose the variables you did. If you remove certain players due to missing data, then comment on this explicitly.
+
+This question is open ended. There is not one correct answer. I am not looking for an in-depth understanding of baseball. Rather, you should provide an analysis that is well-done and well-documented.
+
+#### Selecting a Year: 2003
+According to baseball reference:
+https://www.baseball-reference.com/leagues/MLB/2003-standings.shtml
+
+The best teams were the Atlanta Braves and New York Yankees with a records of 101-61 and a winning % of .623. For simplicity, I'll use the Yankees to compare because they're in the same league.
+The worst team was the Detroit Tigers who went 43-119 with a winning % of .265.
+
+#### Extracting Data
+NOTE: The Tigers dataset should already be loaded from the previous question, but I'll post the code for it anyway.
+```{r}
+tigers2003 <- subset(batting_stats, teamID == "DET" & yearID == 2003)
+```
+```{r}
+yankees2003 <- subset(batting_stats, teamID == "NYA" & yearID == 2003)
+```
+#### Comparing the Three True Outcomes
+The Three True Outcomes (TTO) are described in baseball-reference:
+
+>The Three True Outcomes are a walk, strikeout or home run. They are called this because the three supposedly are the only events that do not involve the defensive team (other than the pitcher and catcher). This ignores outfielders taking away potential homers at the wall, and inside-the-park home runs, and the like; however, over a career those events make up a very small portion of the total.
+
+Baseball statisticians love use the TTO because they ignore variables out of the batter's control. Because of this, I chose the 3 stats that make up the TTO: HR, BB, and SO.
+```{r}
+#extract total stats of each team and per game stats
+#na.rm = TRUE flags NA values and does not count them as part of the sum (i.e. counts NA as 0)
+yankees2003hr = sum(yankees2003$HR, na.rm = TRUE)
+yankees2003hr
+tigers2003hr = sum(tigers2003$HR, na.rm = TRUE)
+tigers2003hr
+yankees2003hrpergame = yankees2003hr/162
+tigers2003hrpergame = tigers2003hr/162
+
+yankees2003so = sum(yankees2003$SO, na.rm = TRUE)
+yankees2003so
+tigers2003so = sum(tigers2003$SO, na.rm = TRUE)
+tigers2003so
+yankees2003sopergame = yankees2003so/162
+tigers2003sopergame = tigers2003so/162
+
+yankees2003bb = sum(yankees2003$BB, na.rm = TRUE)
+yankees2003bb
+tigers2003bb = sum(tigers2003$BB, na.rm = TRUE)
+tigers2003bb
+yankees2003bbpergame = yankees2003bb/162
+tigers2003bbpergame = tigers2003bb/162
+
+
+```
+Comparing the correlations between each stat and wins would require stats from other teams and much more nuanced analysis and is beyond the scope of the assignment. Instead, we're only comparing the two teams stats above and their win totals. 
+
+First, let's get the win totals. The Yankees won 101 games whereas the Tigers won 43. Taking the difference in wins yields 101-43 = 58. 
+
+
+Then, we can extract the differences in each stat we chose to compare by doing the following:
+
+```{r}
+#total
+hrdiff = yankees2003hr-tigers2003hr
+sodiff = yankees2003so-tigers2003so
+bbdiff = yankees2003bb-tigers2003bb
+hrdiff
+sodiff
+bbdiff
+#per game
+hrdiffpg = hrdiff/162
+sodiffpg = sodiff/162
+bbdiffpg = bbdiff/162
+hrdiffpg
+sodiffpg
+bbdiffpg
+```
+
+Just by looking at the differences we can see factors that explain the discrepancy in win totals. Given 77 more HR's than the Tigers, the Yankees have the advantage of having at least 77 more runs per game than the Tigers and that's without accounting runners on base for those home runs. The home run difference is magnified by how much more Yankee batters took walks. If those extra walks came home to score from the extra HR's the Yankees hit, that comes out to 0.475*1.489 ~ 0.7 extra runs per game. The strikeouts are a more subtle point. They don't directly contribute to how many runs are scored. However a strikeout is an outcome that can happen instead of a hit, walk, HR, etc., all of which help boost the probability of getting a run in. So, by having less of an outcome that doesn't score runs, the Yankees were able to maximize the possible outcomes from each at bat better than the Tigers did.
+
+#### Conclusion
+
+The 2003 Yankees had significantly more positive True Outcomes, the walk and HR, than the 2003 Tigers while also having less negative True Outcomes, the strikeout, than the Tigers. This result partially explains why the Yankees won significantly more games than the Tigers.
+
+
+
+
+
+***********************
+
+### Student Feedback
+
+This part is optional. It will be available on all assignments. Feel free to answer on all, some, or none.
+
+1. How is the course going for you in terms of pace and/or difficulty level?
+
+Having previous coding experience made the first few lectures seem slow and assignments a bit easy but I totally understand the reason for doing so. 
+
+2. Do you have any concerns or suggestions?
+
+3. Please provide any other comments you may have.
+
+***********************
+
+### Variables in `batting_stats`
+
+`playerID`
+Player ID code
+
+`yearID`
+Year
+
+`stint`
+player's stint (order of appearances within a season)
+
+`teamID`
+Team; a factor
+
+`lgID`
+League; a factor with levels AA AL FL NL PL UA
+
+`G`
+Games: number of games in which a player played
+
+`G_batting`
+Game as batter
+
+`AB`
+At Bats
+
+`R`
+Runs
+
+`H`
+Hits: times reached base because of a batted, fair ball without error by the defense
+
+`X2B`
+Doubles: hits on which the batter reached second base safely
+
+`X3B`
+Triples: hits on which the batter reached third base safely
+
+`HR`
+Homeruns
+
+`RBI`
+Runs Batted In
+
+`SB`
+Stolen Bases
+
+`CS`
+Caught Stealing
+
+`BB`
+Base on Balls
+
+`SO`
+Strikeouts
+
+`IBB`
+Intentional walks
+
+`HBP`
+Hit by pitch
+
+`SH`
+Sacrifice hits
+
+`SF`
+Sacrifice flies
+
+`GIDP`
+Grounded into double plays
+
+`G_old`
+Old version of games (deprecated)
+
+`BA`
+Batting Average
+
+`PA`
+Plate Appearances
+
+`TB`
+Total Bases
+
+`SlugPct`
+Slugging Percentage
+
+`OBP`
+On base percentage
+
+`OPS`
+On base percentage + slugging
+
+`BABIP`
+Batting Average for balls in play
+
+`playerName`
+Player's name
+

@@ -1,0 +1,80 @@
+---
+title: "Homework_4"
+author: "Victor Ramirez, Lizzy Burr, Charlotte Schulte"
+date: "November 3, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA,tidy = TRUE)
+```
+```{r}
+library(ggplot2)
+```
+
+
+### Question 1
+
+```{r}
+# Binomial
+rbinom(n = 10,size = 1,prob = 0.5)
+
+# Geometric
+rgeom(n = 10, prob = 0.5)
+
+# Poisson, lambda = 1/mean muon lifetime
+rpois(n = 10, lambda = 1/2.196E-6)
+
+# Student t distribution with 3 degrees of freedom
+rt(n = 10, df = 3)
+
+# Hypergeometric, 4 white balls, 3 black balls, 2 balls drawn
+rhyper(nn = 10, m = 4, n = 3, k=2)
+```
+
+
+
+### Question 2
+
+```{r}
+check.dice.roll <- function(dice=1, rolls=1, desired_sum){
+  #dice = number of dice
+  #rolls = number of rolls
+  #desired_roll = dice roll to look for
+  results <- replicate(n=rolls, sample(1:6, size = dice, replace=TRUE)) #dice rolls
+  return(desired_sum %in% results)
+}
+
+iter = 100000
+# Works for 1 die
+one.six <- replicate(
+  n=iter, #cycle through <iter> times
+  check.dice.roll(dice=1,rolls=4,desired_sum=6)
+)
+one.six.prob <- sum(one.six)/iter
+one.six.prob
+```
+```{r}
+iter=100000
+two.six <- replicate(
+  n=iter,
+  check.dice.roll(dice=2,rolls=24,desired_sum=12)
+)
+two.six.prob <- sum(two.six)/iter
+two.six.prob
+```
+
+According to the simulation, rolling 1 six among 4 single dice rolls (P ~ 0.52) is more likely than rolling 2 sixes among 24 double dice rolls (P ~ 0.49)
+
+### Question 
+
+```{r}
+
+```
+
+### Question
+
+```{r}
+
+```
+
